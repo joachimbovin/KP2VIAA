@@ -7,7 +7,7 @@ from pandas import DataFrame
 
 class KP2VIAA(object):
     def __init__(self, path_to_dbcfg="resources/db.cfg"):
-        self.mapping = None
+        self.viaa_id_to_kp_productie_show_id_mapping = None
         self.path_to_dbcfg = path_to_dbcfg
         self.cfg = ConfigParser()
         self.cfg.read(self.path_to_dbcfg)
@@ -17,6 +17,10 @@ class KP2VIAA(object):
                                      user=self.cfg['db']['user'],
                                      password=self.cfg['db']['pwd'])
         self.knst.set_client_encoding('UTF-8')
+
+        self.general_info = None
+        self.people_info = None
+        self.organisations_info = None
 
     def read_mapping_viaa_to_kp(self):
         """
@@ -29,7 +33,7 @@ class KP2VIAA(object):
             }
         }
         """
-        self.mapping = {
+        self.viaa_id_to_kp_productie_show_id_mapping = {
             "viaa_id": {
                 "kp_productie_id": 429013,
                 "kp_show_id": "kp_show_id"
@@ -52,7 +56,7 @@ class KP2VIAA(object):
         :return: A pandas object containing all the kunstenpunt metadata for the production and potentially the show.
         """
         cur = self.get_access_database()
-        productie_id = self.mapping[viaa_id]["kp_productie_id"]
+        productie_id = self.viaa_id_to_kp_productie_show_id_mapping[viaa_id]["kp_productie_id"]
         sql = """
         SELECT pr.title, seasons.name, pr.rerun_of_id
         FROM production.productions AS pr
@@ -62,8 +66,7 @@ class KP2VIAA(object):
         """.format(productie_id)
         cur.execute(sql)
         rosas_productions = cur.fetchall()
-        df_kp_general = DataFrame(rosas_productions, columns=['name', 'season', 'rerun'])
-        return df_kp_general
+        self.general_info = DataFrame(rosas_productions, columns=['name', 'season', 'rerun'])
 
     def get_kp_metadata_functies_for_viaa_id(self, viaa_id):
         """
@@ -72,7 +75,7 @@ class KP2VIAA(object):
         :return: A pandas object containing all the kunstenpunt metadata for the persons and their functions.
         """
         cur = self.get_access_database()
-        productie_id = self.mapping[viaa_id]["kp_productie_id"]
+        productie_id = self.viaa_id_to_kp_productie_show_id_mapping[viaa_id]["kp_productie_id"]
         sql2 = """
         SELECT people.first_name, people.name, fun.name_nl, pr.id
         FROM production.productions AS pr
@@ -86,10 +89,9 @@ class KP2VIAA(object):
           """.format(productie_id)
         cur.execute(sql2)
         rosas_productions = cur.fetchall()
-        df_kp_people = DataFrame(rosas_productions, columns=['first name', 'name', 'function', 'production id'])
-        df_kp_people["full name"] = df_kp_people[['first name', 'name']].apply(lambda x: ' '.join(x), axis=1)
-        df_kp_people = df_kp_people.drop(['first name', 'name'], axis=1)
-        return df_kp_people
+        self.people_info = DataFrame(rosas_productions, columns=['first name', 'name', 'function', 'production id'])
+        self.people_info["full name"] = self.people_info[['first name', 'name']].apply(lambda x: ' '.join(x), axis=1)
+        self.people_info.drop(['first name', 'name'], axis=1, inplace=True)
 
     def get_kp_metadata_organisaties_for_viaa_id(self, viaa_id):
         """
@@ -98,7 +100,7 @@ class KP2VIAA(object):
         :return:
         """
         cur = self.get_access_database()
-        productie_id = self.mapping[viaa_id]["kp_productie_id"]
+        productie_id = self.viaa_id_to_kp_productie_show_id_mapping[viaa_id]["kp_productie_id"]
         sql3 = """
         SELECT organisations.name, functions.name_nl
         FROM production.productions AS pr
@@ -112,8 +114,7 @@ class KP2VIAA(object):
         """.format(productie_id)
         cur.execute(sql3)
         rosas_productions = cur.fetchall()
-        df_kp_organisations = DataFrame(rosas_productions, columns=['organisatie', 'functie'])
-        return df_kp_organisations
+        self.organisations_info = DataFrame(rosas_productions, columns=['organisatie', 'functie'])
 
     def map_kp_to_viaa(self):
         """
@@ -123,6 +124,7 @@ class KP2VIAA(object):
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping = load(f)
         print(dumps(mapping, indent=4))
+
 
 
 if __name__ == "__main__":

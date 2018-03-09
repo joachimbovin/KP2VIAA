@@ -21,7 +21,7 @@ class KP2VIAATests(TestCase):
                 "kp_show_id": "kp_show_id"
             }
         }
-        self.assertDictEqual(self.kp2viaa.mapping, expected_mapping)
+        self.assertDictEqual(self.kp2viaa.viaa_id_to_kp_productie_show_id_mapping, expected_mapping)
 
     def test_dbcfg_read_in_correctly(self):
         self.assertEqual(self.kp2viaa.path_to_dbcfg, "../resources/db.cfg")
