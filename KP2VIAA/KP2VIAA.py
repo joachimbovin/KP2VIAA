@@ -6,7 +6,8 @@ from pandas import DataFrame
 
 
 class KP2VIAA(object):
-    def __init__(self, path_to_dbcfg="resources/db.cfg"):
+    def __init__(self, path_to_dbcfg="resources/db.cfg", path_to_viaa2kp="resources/viaa2kp_id.json"):
+        self.path_to_viaa2kp_mapping = path_to_viaa2kp
         self.viaa_id_to_kp_productie_show_id_mapping = None
         self.path_to_dbcfg = path_to_dbcfg
         self.cfg = ConfigParser()
@@ -33,12 +34,8 @@ class KP2VIAA(object):
             }
         }
         """
-        self.viaa_id_to_kp_productie_show_id_mapping = {
-            "viaa_id": {
-                "kp_productie_id": 429013,
-                "kp_show_id": "kp_show_id"
-            }
-        }
+        with open(self.path_to_viaa2kp_mapping, "r", "utf-8") as f:
+            self.viaa_id_to_kp_productie_show_id_mapping = load(f)
 
     def get_access_database(self):
         """
@@ -133,4 +130,4 @@ if __name__ == "__main__":
     #print(kp2viaa.get_KP_metadata_for_VIAA_id("viaa_id"))
     print(kp2viaa.get_kp_metadata_functies_for_viaa_id("viaa_id"))
     #print(kp2viaa.get_KP_metadata_organisaties_for_VIAA_id("viaa_id"))
-    kp2viaa.map_kp_to_viaa()
+    #kp2viaa.map_kp_to_viaa()
