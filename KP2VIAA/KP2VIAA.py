@@ -55,14 +55,10 @@ class KP2VIAA(object):
         productie_id = self.mapping[viaa_id]["kp_productie_id"]
         sql = """
         SELECT pr.title, seasons.name, pr.rerun_of_id
-        
         FROM production.productions AS pr
-        
         JOIN production.seasons AS seasons
         ON pr.season_id = seasons.id
-
         WHERE pr.id={0}
-
         """.format(productie_id)
         cur.execute(sql)
         rosas_productions = cur.fetchall()
