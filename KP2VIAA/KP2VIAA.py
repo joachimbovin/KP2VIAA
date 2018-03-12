@@ -137,14 +137,13 @@ class KP2VIAA(object):
         """
         self.get_kp_metadata_for_viaa_id(viaa_id)
         self.get_kp_metadata_personen_for_viaa_id(viaa_id)
-        persons_info = self.people_info
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping_functies = load(f)
         for item in mapping_functies["Maker"]:
             for functie in mapping_functies["Maker"][item]:
-                for i in range(len(persons_info["full name"])):
-                    if persons_info["function"][i] == functie:
-                        print "<{0}>{1}</{0}>".format(item, persons_info["full name"][i])
+                for i in range(len(self.people_info["full name"])):
+                    if self.people_info["function"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, self.people_info["full name"][i])
 
 
     def map_kp_persons_to_viaa_contributors(self,viaa_id):
@@ -156,14 +155,13 @@ class KP2VIAA(object):
         """
         self.get_kp_metadata_for_viaa_id(viaa_id)
         self.get_kp_metadata_personen_for_viaa_id(viaa_id)
-        persons_info = self.people_info
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping_functies = load(f)
         for item in mapping_functies["Bijdrager"]:
             for functie in mapping_functies["Bijdrager"][item]:
-                for i in range(len(persons_info["full name"])):
-                    if persons_info["function"][i] == functie:
-                        print "<{0}>{1}</{0}>".format(item, persons_info["full name"][i])
+                for i in range(len(self.people_info["full name"])):
+                    if self.people_info["function"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, self.people_info["full name"][i])
 
 
     def map_kp_organisations_to_viaa_makers(self, viaa_id):
@@ -176,14 +174,13 @@ class KP2VIAA(object):
 
         self.get_kp_metadata_for_viaa_id(viaa_id)
         self.get_kp_metadata_organisaties_for_viaa_id(viaa_id)
-        organisations_info = self.organisations_info
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping_functies = load(f)
         for item in mapping_functies["Maker"]:
             for functie in mapping_functies["Maker"][item]:
-                for i in range(len(organisations_info["organisatie"])):
-                    if organisations_info["functie"][i] == functie:
-                        print "<{0}>{1}</{0}>".format(item, organisations_info["organisatie"][i])
+                for i in range(len(self.organisations_info["organisatie"])):
+                    if self.organisations_info["functie"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, self.organisations_info["organisatie"][i])
 
     def map_kp_organisations_to_viaa_contributors(self, viaa_id):
         """
@@ -194,14 +191,13 @@ class KP2VIAA(object):
         """
         self.get_kp_metadata_for_viaa_id(viaa_id)
         self.get_kp_metadata_organisaties_for_viaa_id(viaa_id)
-        organisations_info = self.organisations_info
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping_functies = load(f)
         for item in mapping_functies["Bijdrager"]:
             for functie in mapping_functies["Bijdrager"][item]:
-                for i in range(len(organisations_info["organisatie"])):
-                    if organisations_info["functie"][i] == functie:
-                        print "<{0}>{1}</{0}>".format(item, organisations_info["organisatie"][i])
+                for i in range(len(self.organisations_info["organisatie"])):
+                    if self.organisations_info["functie"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, self.organisations_info["organisatie"][i])
 
     def map_kp_to_viaa(self,viaa_id):
         """
