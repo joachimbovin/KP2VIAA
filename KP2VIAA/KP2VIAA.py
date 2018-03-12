@@ -65,7 +65,7 @@ class KP2VIAA(object):
         rosas_productions = cur.fetchall()
         self.general_info = DataFrame(rosas_productions, columns=['name', 'season', 'rerun'])
 
-    def get_kp_metadata_functies_for_viaa_id(self, viaa_id):
+    def get_kp_metadata_personen_for_viaa_id(self, viaa_id):
         """
         Returns the KP metadata about the persons and their function based on the VIAA ID.
         :param viaa_id:
@@ -116,13 +116,63 @@ class KP2VIAA(object):
     def map_kp_general_to_viaa(self, viaa_id):
         """
         Reads the general DataFrame and maps this to an XML format
+        :return: XML tags for <reeks>, <serie>, <seizoen>
+        """
+        self.get_kp_metadata_for_viaa_id(viaa_id)
+        general_info = self.general_info
+        if general_info["rerun"][0] == None:
+            pass
+        else:
+            print "<reeks>{0}</reeks>".format({general_info["rerun"][0]})
+        print "<serie>{0}</serie>".format(general_info["name"][0])
+        print "<seizoen>{0}</seizoen>".format(general_info["season"][0])
+
+
+    def map_kp_persons_to_viaa(self,viaa_id):
+        """
+        Matches the functions from the kp persons dataframe to the viaa functions based on the mapping
+        from the metadata_mapping.json
+        :param viaa_id:
+        :return: XML tags for <dc_creators type="list"> & <dc_contributors type="list">
+        """
+        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_personen_for_viaa_id(viaa_id)
+        persons_info = self.people_info
+        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+            mapping_functies = load(f)
+        print "<dc_creators type='list'>"
+        for item in mapping_functies["Maker"]:
+            for functie in mapping_functies["Maker"][item]:
+                for i in range(len(persons_info["full name"])):
+                    if persons_info["function"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, persons_info["full name"][i])
+        print "</dc_creators>"
+        print "<dc_contributors type='list'>"
+        for item in mapping_functies["Bijdrager"]:
+            for functie in mapping_functies["Bijdrager"][item]:
+                for i in range(len(persons_info["full name"])):
+                    if persons_info["function"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, persons_info["full name"][i])
+        print "</dc_contributors>"
+
+
+    def map_kp_organisations_to_viaa(self, viaa_id):
+        """
+
+        :param viaa_id:
         :return:
         """
-        kp2viaa.get_kp_metadata_for_viaa_id(viaa_id)
-        general_info = kp2viaa.general_info
-        print "<reeks>{0}</reeks>".format({general_info["rerun"][0]})
-        print "<serie>{0}</serie>".format(general_info["name"][0])
-        print "<reeks>{0}</reeks>".format(general_info["season"][0])
+
+        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_personen_for_viaa_id(viaa_id)
+
+
+        
+
+
+
+
+
 
 
 
@@ -150,3 +200,4 @@ if __name__ == "__main__":
     #print kp2viaa.viaa_id_to_kp_productie_show_id_mapping
     #print kp2viaa.general_info
     kp2viaa.map_kp_general_to_viaa("viaa_id")
+    kp2viaa.map_kp_persons_to_viaa("viaa_id")

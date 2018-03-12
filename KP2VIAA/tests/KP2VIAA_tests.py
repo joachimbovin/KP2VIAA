@@ -42,7 +42,7 @@ class KP2VIAATests(TestCase):
 
     def test_get_metadata_for_mozart_functies(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
-        self.kp2viaa.get_kp_metadata_functies_for_viaa_id("viaa_id")
+        self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
         with open("../resources/mozart_personen_functies.json", "r", "utf-8") as f:
             x = load(f, encoding='utf-8')
         mozart_metadata_expected = DataFrame(data=x, columns=['function', "production id", 'full name'])
