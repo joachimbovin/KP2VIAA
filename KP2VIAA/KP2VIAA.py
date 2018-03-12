@@ -6,7 +6,7 @@ from pandas import DataFrame
 
 
 class KP2VIAA(object):
-    def __init__(self, path_to_dbcfg="resources/db.cfg", path_to_viaa2kp="resources/viaa2kp_id.json"):
+    def __init__(self, path_to_dbcfg="resources/db.cfg", path_to_viaa2kp="resources/viaa_id_testcase.json"):
         self.path_to_viaa2kp_mapping = path_to_viaa2kp
         self.viaa_id_to_kp_productie_show_id_mapping = None
         self.path_to_dbcfg = path_to_dbcfg
@@ -113,6 +113,20 @@ class KP2VIAA(object):
         rosas_productions = cur.fetchall()
         self.organisations_info = DataFrame(rosas_productions, columns=['organisatie', 'functie'])
 
+    def map_kp_general_to_viaa(self, viaa_id):
+        """
+        Reads the general DataFrame and maps this to an XML format
+        :return:
+        """
+        kp2viaa.get_kp_metadata_for_viaa_id(viaa_id)
+        general_info = kp2viaa.general_info
+        print "<reeks>{0}</reeks>".format({general_info["rerun"][0]})
+        print "<serie>{0}</serie>".format(general_info["name"][0])
+        print "<reeks>{0}</reeks>".format(general_info["season"][0])
+
+
+
+
     def map_kp_to_viaa(self):
         """
         Reads the Kunstenpunt metadata and appends this to an XML file
@@ -127,7 +141,12 @@ class KP2VIAA(object):
 if __name__ == "__main__":
     kp2viaa = KP2VIAA()
     kp2viaa.read_mapping_viaa_to_kp()
-    #print(kp2viaa.get_KP_metadata_for_VIAA_id("viaa_id"))
-    print(kp2viaa.get_kp_metadata_functies_for_viaa_id("viaa_id"))
+    #print(kp2viaa.get_kp_metadata_for_viaa_id("viaa_id"))
+    #print(kp2viaa.get_kp_metadata_functies_for_viaa_id("viaa_id"))
     #print(kp2viaa.get_KP_metadata_organisaties_for_VIAA_id("viaa_id"))
     #kp2viaa.map_kp_to_viaa()
+    #print kp2viaa.get_kp_metadata_for_viaa_id("viaa_id")
+    #kp2viaa.get_kp_metadata_for_viaa_id("viaa_id")
+    #print kp2viaa.viaa_id_to_kp_productie_show_id_mapping
+    #print kp2viaa.general_info
+    kp2viaa.map_kp_general_to_viaa("viaa_id")
