@@ -128,76 +128,106 @@ class KP2VIAA(object):
         print "<seizoen>{0}</seizoen>".format(general_info["season"][0])
 
 
-    def map_kp_persons_to_viaa(self,viaa_id):
+    def map_kp_persons_to_viaa_makers(self,viaa_id):
         """
-        Matches the functions from the kp persons dataframe to the viaa functions based on the mapping
+        Matches the functions from the kp persons dataframe to the viaa "Makers" functions based on the mapping
         from the metadata_mapping.json
         :param viaa_id:
-        :return: XML tags for <dc_creators type="list"> & <dc_contributors type="list">
+        :return: XML tags for <dc_creators type="list">
         """
         self.get_kp_metadata_for_viaa_id(viaa_id)
         self.get_kp_metadata_personen_for_viaa_id(viaa_id)
         persons_info = self.people_info
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping_functies = load(f)
-        print "<dc_creators type='list'>"
         for item in mapping_functies["Maker"]:
             for functie in mapping_functies["Maker"][item]:
                 for i in range(len(persons_info["full name"])):
                     if persons_info["function"][i] == functie:
                         print "<{0}>{1}</{0}>".format(item, persons_info["full name"][i])
-        print "</dc_creators>"
-        print "<dc_contributors type='list'>"
+
+
+    def map_kp_persons_to_viaa_contributors(self,viaa_id):
+        """
+        Matches the functions from the kp persons dataframe to the viaa "Bijdragers" functions based on the mapping
+        from the metadata_mapping.json
+        :param viaa_id:
+        :return: XML tags for <dc_contributors type="list">
+        """
+        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_personen_for_viaa_id(viaa_id)
+        persons_info = self.people_info
+        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+            mapping_functies = load(f)
         for item in mapping_functies["Bijdrager"]:
             for functie in mapping_functies["Bijdrager"][item]:
                 for i in range(len(persons_info["full name"])):
                     if persons_info["function"][i] == functie:
                         print "<{0}>{1}</{0}>".format(item, persons_info["full name"][i])
-        print "</dc_contributors>"
 
 
-    def map_kp_organisations_to_viaa(self, viaa_id):
+    def map_kp_organisations_to_viaa_makers(self, viaa_id):
         """
-
+        Matches the functions from the kp organisations dataframe to the viaa "Makers" functions based on the mapping
+        from the metadata_mapping.json
         :param viaa_id:
-        :return:
+        :return: XML tags for <dc_creators type="list">
         """
 
         self.get_kp_metadata_for_viaa_id(viaa_id)
-        self.get_kp_metadata_personen_for_viaa_id(viaa_id)
+        self.get_kp_metadata_organisaties_for_viaa_id(viaa_id)
+        organisations_info = self.organisations_info
+        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+            mapping_functies = load(f)
+        for item in mapping_functies["Maker"]:
+            for functie in mapping_functies["Maker"][item]:
+                for i in range(len(organisations_info["organisatie"])):
+                    if organisations_info["functie"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, organisations_info["organisatie"][i])
 
+    def map_kp_organisations_to_viaa_contributors(self, viaa_id):
+        """
+        Matches the functions from the kp organisations dataframe to the viaa "Bijdragers" functions based on the mapping
+        from the metadata_mapping.json
+        :param viaa_id:
+        :return: XML tags for <dc_contributors type="list">
+        """
+        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_organisaties_for_viaa_id(viaa_id)
+        organisations_info = self.organisations_info
+        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+            mapping_functies = load(f)
+        for item in mapping_functies["Bijdrager"]:
+            for functie in mapping_functies["Bijdrager"][item]:
+                for i in range(len(organisations_info["organisatie"])):
+                    if organisations_info["functie"][i] == functie:
+                        print "<{0}>{1}</{0}>".format(item, organisations_info["organisatie"][i])
 
-        
-
-
-
-
-
-
-
-
-
-    def map_kp_to_viaa(self):
+    def map_kp_to_viaa(self,viaa_id):
         """
         Reads the Kunstenpunt metadata and appends this to an XML file
+        :param viaa_id
         :return: XML file
         """
-        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
-            mapping = load(f)
-        print(dumps(mapping, indent=4))
+        #with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+        #    mapping = load(f)
+        #print(dumps(mapping, indent=4))
+
+        self.map_kp_general_to_viaa(viaa_id)
+        print "<dc_creators type='list'>"
+        self.map_kp_persons_to_viaa_makers(viaa_id)
+        self.map_kp_organisations_to_viaa_makers(viaa_id)
+        print "</dc_creators>"
+        print "<dc_contributors type='list'>"
+        self.map_kp_persons_to_viaa_contributors(viaa_id)
+        self.map_kp_organisations_to_viaa_contributors(viaa_id)
+        print "</dc_contributors>"
+
 
 
 
 if __name__ == "__main__":
     kp2viaa = KP2VIAA()
     kp2viaa.read_mapping_viaa_to_kp()
-    #print(kp2viaa.get_kp_metadata_for_viaa_id("viaa_id"))
-    #print(kp2viaa.get_kp_metadata_functies_for_viaa_id("viaa_id"))
-    #print(kp2viaa.get_KP_metadata_organisaties_for_VIAA_id("viaa_id"))
-    #kp2viaa.map_kp_to_viaa()
-    #print kp2viaa.get_kp_metadata_for_viaa_id("viaa_id")
-    #kp2viaa.get_kp_metadata_for_viaa_id("viaa_id")
-    #print kp2viaa.viaa_id_to_kp_productie_show_id_mapping
-    #print kp2viaa.general_info
-    kp2viaa.map_kp_general_to_viaa("viaa_id")
-    kp2viaa.map_kp_persons_to_viaa("viaa_id")
+    kp2viaa.map_kp_to_viaa("viaa_id")
+
