@@ -113,6 +113,30 @@ class KP2VIAA(object):
         rosas_productions = cur.fetchall()
         self.organisations_info = DataFrame(rosas_productions, columns=['organisatie', 'functie'])
 
+
+    def get_kp_metadata_genres_for_viaa_id(self, viaa_id):
+        """
+        Return the KP metadata about the genre based on the VIAA ID
+        :param viaa_id:
+        :return:
+        """
+        cur = self.get_access_database()
+        productie_id = self.viaa_id_to_kp_productie_show_id_mapping[viaa_id]["kp_productie_id"]
+        sql4 = """
+        SELECT pr.title, genres.name_nl
+        FROM production.productions AS pr
+        JOIN production.relationships AS prod_rel_genre
+        ON pr.id = prod_rel_genre.production_id
+        JOIN production.genres AS genres
+        ON prod_rel_genre.genre_id = genres.id
+        WHERE pr.id={0}    
+        """.format(productie_id)
+        cur.execute(sql4)
+        rosas_productions = cur.fetchall()
+        self.genre_info = DataFrame(rosas_productions, columns=['Voorstelling','Genre'])
+        print self.genre_info
+
+
     def map_kp_general_to_viaa(self, viaa_id):
         """
         Reads the general DataFrame and maps this to an XML format
@@ -225,5 +249,5 @@ class KP2VIAA(object):
 if __name__ == "__main__":
     kp2viaa = KP2VIAA()
     kp2viaa.read_mapping_viaa_to_kp()
-    kp2viaa.map_kp_to_viaa("viaa_id")
-
+    #kp2viaa.map_kp_to_viaa("viaa_id")
+    kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")

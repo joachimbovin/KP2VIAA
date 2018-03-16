@@ -58,3 +58,14 @@ class KP2VIAATests(TestCase):
             }
         ], columns=["organisatie", "functie"])
         self.assertTrue(self.kp2viaa.organisations_info.equals(mozart_metadata_expected))
+
+    def test_get_metadata_for_mozart_genres(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
+        mozart_metadata_expected = DataFrame([
+            {
+                "Voorstelling" : "Mozart/Concert Arias Un Moto di Gioia",
+                "Genre" : "dans"
+            }
+        ], columns=["Voorstelling", "Genre"])
+        self.assertTrue(self.kp2viaa.genre_info.equals(mozart_metadata_expected))
