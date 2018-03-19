@@ -136,6 +136,27 @@ class KP2VIAA(object):
         self.genre_info = DataFrame(rosas_productions, columns=['Voorstelling','Genre'])
 
 
+    def get_kp_metadata_languages_for_viaa_id(self, viaa_id):
+        """
+        Creates class variable containing DataFrame with kp metadata about languages based on the viaa id
+        :param viaa_id:
+        :return: metadata languages
+        """
+        cur = self.get_access_database()
+        productie_id = self.viaa_id_to_kp_productie_show_id_mapping[viaa_id]["kp_productie_id"]
+        sql5 = """SELECT pr.title, lang.name_nl
+        FROM production.productions AS pr
+        LEFT JOIN production.production_languages AS prod_lang
+        ON prod_lang.production_id = pr.id
+        LEFT JOIN production.languages as lang
+        ON prod_lang.language_id = lang.id
+        WHERE pr.id={0}
+        """.format(productie_id)
+        cur.execute(sql5)
+        rosas_productions = cur.fetchall()
+        self.language_info = DataFrame(rosas_productions, columns=['voorstelling','taal'])
+
+
     def map_kp_general_to_viaa(self, viaa_id):
         """
         Reads the general DataFrame and maps this to an XML format
@@ -224,7 +245,7 @@ class KP2VIAA(object):
 
     def map_kp_genres_to_viaa_genres(self, viaa_id):
         """
-        Matches the genres from the kp organisations DataFrame to the viaa genres based on the mapping
+        Matches the genres from the kp DataFrame to the viaa genres based on the mapping
         genres_mapping.json
         :param viaa_id:
         :return: XML tags for genres.
@@ -232,14 +253,30 @@ class KP2VIAA(object):
         self.get_kp_metadata_for_viaa_id(viaa_id)
         self.get_kp_metadata_genres_for_viaa_id(viaa_id)
         with open("resources/genres_mapping.json", "r", "utf-8") as f:
-            mapping_functies = load(f)
-        for item in mapping_functies:
-            for genre in mapping_functies[item]:
+            mapping_genres = load(f)
+        for item in mapping_genres:
+            for genre in mapping_genres[item]:
                 for i in range(len(self.genre_info["Genre"])):
                     if self.genre_info["Genre"][i] == genre:
                         print "<genre>{0}</genre>".format(self.genre_info["Genre"][i])
 
 
+    def map_kp_language_to_viaa_language(self, viaa_id):
+        """
+        Matches the languages from the kp DataFrame to the viaa languages based on the mapping
+        languages_mapping.json
+        :param viaa_id:
+        :return: XML tags for languages.
+        """
+        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_languages_for_viaa_id(viaa_id)
+        with open("resources/languages_mapping.json", "r", "utf-8") as f:
+            mapping_languages = load(f)
+        for item in mapping_languages:
+            for language in mapping_languages[item]:
+                for i in range(len(self.language_info["taal"])):
+                    if self.language_info["taal"][i] == language:
+                        print "<multiselect>{0}</multiselect>".format(self.language_info["taal"][i])
 
 
     def map_kp_to_viaa(self,viaa_id):
@@ -274,3 +311,5 @@ if __name__ == "__main__":
     #kp2viaa.map_kp_to_viaa("viaa_id")
     #kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
     kp2viaa.map_kp_to_viaa("viaa_id")
+
+
