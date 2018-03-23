@@ -3,6 +3,7 @@ from codecs import open
 import psycopg2
 from configparser import ConfigParser
 from pandas import DataFrame
+from lxml import etree
 
 
 class KP2VIAA(object):
@@ -157,6 +158,12 @@ class KP2VIAA(object):
         self.language_info = DataFrame(rosas_productions, columns=['voorstelling','taal'])
 
 
+    def read_viaa_xml_to_tree(self):
+        parser = etree.XMLParser(remove_blank_text=True)
+        with open("resources/viaa_xml_testcase.xml") as file:   #change this to parameter xml_viaa
+            tree = etree.parse(file, parser)
+            self.tree = tree
+
     def map_kp_general_to_viaa(self, viaa_id):
         """
         Reads the general DataFrame and maps this to an XML format
@@ -164,12 +171,34 @@ class KP2VIAA(object):
         """
         self.get_kp_metadata_for_viaa_id(viaa_id)
         general_info = self.general_info
-        if general_info["rerun"][0] == None:
-            pass
-        else:
-            print "<reeks>{0}</reeks>".format({general_info["rerun"][0]})
-        print "<serie>{0}</serie>".format(general_info["name"][0])
-        print "<seizoen>{0}</seizoen>".format(general_info["season"][0])
+        root = self.tree.getroot()
+        try:
+            (self.tree.find(".//dc_titles").tag)
+            for elements in self.tree.iter('dc_titles'):
+                child = etree.Element("reeks")
+                elements.insert(0, child)
+                child.text = general_info["rerun"][0]
+                child_2 = etree.Element("serie")
+                elements.insert(0, child_2)
+                child_2.text = general_info["name"][0]
+                child_3 = etree.Element("seizoen")
+                elements.insert(0, child_3)
+                child_3.text = general_info["season"][0]
+        except:
+            for elements in self.tree.iter("MDProperties"):
+                child = etree.Element("dc_titles")
+                elements.insert(11, child)
+            for elements in self.tree.iter('dc_titles'):
+                child = etree.Element("reeks")
+                elements.insert(0, child)
+                child.text = general_info["rerun"][0]
+                child_2 = etree.Element("serie")
+                elements.insert(0, child_2)
+                child_2.text = general_info["name"][0]
+                child_3 = etree.Element("seizoen")
+                elements.insert(0, child_3)
+                child_3.text = general_info["season"][0]
+
 
 
     def map_kp_persons_to_viaa_makers(self,viaa_id):
@@ -183,6 +212,8 @@ class KP2VIAA(object):
         self.get_kp_metadata_personen_for_viaa_id(viaa_id)
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping_functies = load(f)
+
+
         for item in mapping_functies["Maker"]:
             for functie in mapping_functies["Maker"][item]:
                 for i in range(len(self.people_info["full name"])):
@@ -285,22 +316,25 @@ class KP2VIAA(object):
         :param viaa_id
         :return: XML file
         """
+
+        self.tree.write("resources/viaa_xml_testcase.XML", pretty_print=True, xml_declaration=True)
+
         #with open("resources/metadata_mapping.json", "r", "utf-8") as f:
         #    mapping = load(f)
         #print(dumps(mapping, indent=4))
 
-        self.map_kp_general_to_viaa(viaa_id)
-        print "<dc_creators type='list'>"
-        self.map_kp_persons_to_viaa_makers(viaa_id)
-        self.map_kp_organisations_to_viaa_makers(viaa_id)
-        print "</dc_creators>"
-        print "<dc_contributors type='list'>"
-        self.map_kp_persons_to_viaa_contributors(viaa_id)
-        self.map_kp_organisations_to_viaa_contributors(viaa_id)
-        print "</dc_contributors>"
-        print "<dc_types type='list'>"
-        self.map_kp_genres_to_viaa_genres(viaa_id)
-        print "</dc_types>"
+        # self.map_kp_general_to_viaa(viaa_id)
+        # print "<dc_creators type='list'>"
+        # self.map_kp_persons_to_viaa_makers(viaa_id)
+        # self.map_kp_organisations_to_viaa_makers(viaa_id)
+        # print "</dc_creators>"
+        # print "<dc_contributors type='list'>"
+        # self.map_kp_persons_to_viaa_contributors(viaa_id)
+        # self.map_kp_organisations_to_viaa_contributors(viaa_id)
+        # print "</dc_contributors>"
+        # print "<dc_types type='list'>"
+        # self.map_kp_genres_to_viaa_genres(viaa_id)
+        # print "</dc_types>"
 
 
 
@@ -310,6 +344,9 @@ if __name__ == "__main__":
     kp2viaa.read_mapping_viaa_to_kp()
     #kp2viaa.map_kp_to_viaa("viaa_id")
     #kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
+    #kp2viaa.map_kp_to_viaa("viaa_id")
+    kp2viaa.read_viaa_xml_to_tree()
+    kp2viaa.map_kp_general_to_viaa("viaa_id")
     kp2viaa.map_kp_to_viaa("viaa_id")
 
 
