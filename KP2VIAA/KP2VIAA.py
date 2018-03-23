@@ -240,11 +240,30 @@ class KP2VIAA(object):
         self.get_kp_metadata_personen_for_viaa_id(viaa_id)
         with open("resources/metadata_mapping.json", "r", "utf-8") as f:
             mapping_functies = load(f)
-        for item in mapping_functies["Bijdrager"]:
-            for functie in mapping_functies["Bijdrager"][item]:
-                for i in range(len(self.people_info["full name"])):
-                    if self.people_info["function"][i] == functie:
-                        print "<{0}>{1}</{0}>".format(item, self.people_info["full name"][i])
+        try:
+            (self.tree.find(".//dc_contributors").tag)
+            for elements in self.tree.iter("dc_contributors"):
+                for item in mapping_functies["Bijdrager"]:
+                    for functie in mapping_functies["Bijdrager"][item]:
+                        for i in range(len(self.people_info["full name"])):
+                            if self.people_info["function"][i] == functie:
+                                child = etree.Element(item)
+                                elements.insert(0, child)
+                                child.text = self.people_info["full name"][i]
+        except:
+            for elements in self.tree.iter("MDProperties"):
+                child = etree.Element("dc_contributors")
+                elements.insert(11, child)
+            for elements in self.tree.iter("dc_contributors"):
+                for item in mapping_functies["Bijdrager"]:
+                    for functie in mapping_functies["Bijdrager"][item]:
+                        for i in range(len(self.people_info["full name"])):
+                            if self.people_info["function"][i] == functie:
+                                child = etree.Element(item)
+                                elements.insert(0, child)
+                                child.text = self.people_info["full name"][i]
+                                #print "<{0}>{1}</{0}>".format(item, self.people_info["full name"][i])
+
 
 
     def map_kp_organisations_to_viaa_makers(self, viaa_id):
@@ -356,5 +375,6 @@ if __name__ == "__main__":
     kp2viaa.read_viaa_xml_to_tree()
     kp2viaa.map_kp_general_to_viaa("viaa_id")
     kp2viaa.map_kp_persons_to_viaa_makers("viaa_id")
+    kp2viaa.map_kp_persons_to_viaa_contributors("viaa_id")
     kp2viaa.map_kp_to_viaa("viaa_id")
 
