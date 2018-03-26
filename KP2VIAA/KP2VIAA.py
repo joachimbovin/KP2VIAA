@@ -166,7 +166,7 @@ class KP2VIAA(object):
         :return: class variable xml tree
         """
         parser = etree.XMLParser(remove_blank_text=True)
-        with open("resources/viaa_xml_testcase.xml") as file:   #change this to parameter xml_viaa
+        with open("resources/test_file.xml") as file:   #change this to parameter xml_viaa
             tree = etree.parse(file, parser)
             self.tree = tree
 
@@ -188,18 +188,30 @@ class KP2VIAA(object):
         :return: XML tags for <reeks>, <serie>, <seizoen>
         """
         self.get_kp_metadata_for_viaa_id(viaa_id)  #if rerun = None pass?!
-        try:
-            (self.tree.find(".//dc_titles").tag)
-            self.write_kp_general_to_dc_titles("reeks","rerun")
-            self.write_kp_general_to_dc_titles("serie", "name")
-            self.write_kp_general_to_dc_titles("seizoen","season")
-        except:
+
+            #(self.tree.find(".//dc_titles").tag)
+        test = self.tree.xpath('//dc_titles')
+        if test != []:
+            if self.general_info["rerun"][0] == None:
+                self.write_kp_general_to_dc_titles("serie", "name")
+                self.write_kp_general_to_dc_titles("seizoen","season")
+            else:
+                self.write_kp_general_to_dc_titles("serie", "name")
+                self.write_kp_general_to_dc_titles("seizoen","season")
+                self.write_kp_general_to_dc_titles("reeks","rerun")
+        else:
             for elements in self.tree.iter("MDProperties"):
                 child = etree.Element("dc_titles")
-                elements.insert(11, child)
-            self.write_kp_general_to_dc_titles("reeks", "rerun")
-            self.write_kp_general_to_dc_titles("serie", "name")
-            self.write_kp_general_to_dc_titles("seizoen", "season")
+                elements.insert(0, child)
+            if self.general_info["rerun"][0] == None:
+                self.write_kp_general_to_dc_titles("serie", "name")
+                self.write_kp_general_to_dc_titles("seizoen", "season")
+            else:
+                self.write_kp_general_to_dc_titles("serie", "name")
+                self.write_kp_general_to_dc_titles("seizoen", "season")
+                self.write_kp_general_to_dc_titles("reeks", "rerun")
+        # except:
+
 
 
     def map_kp_persons_to_viaa_makers(self,viaa_id):
@@ -310,6 +322,7 @@ class KP2VIAA(object):
                             elements.insert(0, child)
                             child.text = self.organisations_info["organisatie"][i]
 
+
     def map_kp_genres_to_viaa_genres(self, viaa_id):
         """
         Matches the genres from the kp DataFrame to the viaa genres based on the mapping
@@ -346,6 +359,11 @@ class KP2VIAA(object):
                                 elements.insert(0, child)
                                 child.text = self.genre_info["Genre"][i]
 
+   # def map_kp_genres_to_viaa_genres_xml(self):
+
+
+
+
 
 
     def map_kp_language_to_viaa_language(self, viaa_id):
@@ -373,7 +391,7 @@ class KP2VIAA(object):
         :return: XML file
         """
 
-        self.tree.write("resources/viaa_xml_testcase.XML", pretty_print=True, xml_declaration=True)
+        self.tree.write("resources/test_file.XML", pretty_print=True, xml_declaration=True, encoding='UTF-8')
 
         #with open("resources/metadata_mapping.json", "r", "utf-8") as f:
         #    mapping = load(f)
