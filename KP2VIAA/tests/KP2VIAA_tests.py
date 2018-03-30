@@ -6,13 +6,37 @@ from pandas import DataFrame
 from KP2VIAA.KP2VIAA import KP2VIAA
 from json import load
 from codecs import open
+from lxml import etree
 
 
 class KP2VIAATests(TestCase):
     def setUp(self):
         self.kp2viaa = KP2VIAA(path_to_dbcfg="../resources/db.cfg",
-                               path_to_viaa2kp="../resources/viaa_id_testcase.json")
+                               path_to_viaa2kp="../resources/viaa_id_testcase.json",
+                               path_to_xml="../resources/test_file.xml",
+                               path_metadata_mapping="../resources/metadata_mapping.json")
         self.maxDiff = None
+
+    def test_map_kp_general_to_dc_titles(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_general_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists("dc_titles")
+        self.kp2viaa.map_kp_general_to_viaa()
+        self.assertTrue(len(self.kp2viaa.tree.xpath("//seizoen")), 1)
+
+    def test_ensure_element_exists(self):
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists("testje")
+        self.assertEqual(len(self.kp2viaa.tree.xpath("//testje")), 1)
+
+    def test_map_kp_persons_to_viaa_makers(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists("dc_creators")
+        self.kp2viaa.map_kp_persons_to_viaa_makers("viaa_id")
+        self.assertEqual(self.kp2viaa.tree.xpath("//Choreograaf")[0].text, "Anne Teresa De Keersmaeker")
 
     def test_read_mapping(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
@@ -30,7 +54,7 @@ class KP2VIAATests(TestCase):
 
     def test_get_metadata_for_mozart(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
-        self.kp2viaa.get_kp_metadata_for_viaa_id("viaa_id")
+        self.kp2viaa.get_kp_metadata_general_for_viaa_id("viaa_id")
         mozart_metadata_expected = DataFrame([
             {
                 "name": "Mozart/Concert Arias Un Moto di Gioia",
@@ -80,3 +104,6 @@ class KP2VIAATests(TestCase):
             }
         ], columns=["voorstelling", "taal"])
         self.assertTrue(self.kp2viaa.language_info.equals(mozart_metadata_expected))
+
+    def test_consume_api(self):
+        self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")

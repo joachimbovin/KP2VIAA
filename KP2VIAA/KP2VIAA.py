@@ -6,11 +6,19 @@ import psycopg2
 from configparser import ConfigParser
 from pandas import DataFrame
 from lxml import etree
+import requests
 
 
 class KP2VIAA(object):
-    def __init__(self, path_to_dbcfg="resources/db.cfg", path_to_viaa2kp="resources/viaa_id_testcase.json"):
+    def __init__(self, path_to_dbcfg="resources/db.cfg",
+                 path_to_viaa2kp="resources/viaa_id_testcase.json",
+                 path_to_xml="resources/test_file.xml",
+                 path_metadata_mapping="resources/metadata_mapping.json",
+                 path_to_qas_auth="resources/qasviaaauthenticationbase64.txt"):
         self.path_to_viaa2kp_mapping = path_to_viaa2kp
+        self.path_to_xml = path_to_xml
+        self.path_metadata_mapping = path_metadata_mapping
+        self.path_to_qas_auth=path_to_qas_auth
         self.viaa_id_to_kp_productie_show_id_mapping = None
         self.path_to_dbcfg = path_to_dbcfg
         self.cfg = ConfigParser()
@@ -25,6 +33,9 @@ class KP2VIAA(object):
         self.general_info = None
         self.people_info = None
         self.organisations_info = None
+        self.genre_info = None
+        self.language_info = None
+        self.tree = None
 
     def read_mapping_viaa_to_kp(self):
         """
@@ -48,7 +59,7 @@ class KP2VIAA(object):
         cur = self.knst.cursor()
         return cur   #do I still have to return cur?
 
-    def get_kp_metadata_for_viaa_id(self, viaa_id):
+    def get_kp_metadata_general_for_viaa_id(self, viaa_id):
         """
         Returns the kunstenpunt metadata about the production for a specific viaa_id. The viaa id is mapped to a kunstenpunt production id
         and a kunstenpunt show id.
@@ -77,7 +88,7 @@ class KP2VIAA(object):
         cur = self.get_access_database()
         productie_id = self.viaa_id_to_kp_productie_show_id_mapping[viaa_id]["kp_productie_id"]
         sql = """
-        SELECT people.first_name, people.name, fun.name_nl, pr.id
+        SELECT people.full_name, fun.name_nl, pr.id
         FROM production.productions AS pr
         JOIN production.relationships AS rel
         ON pr.id = rel.production_id
@@ -89,9 +100,7 @@ class KP2VIAA(object):
           """.format(productie_id)
         cur.execute(sql)
         rosas_productions = cur.fetchall()
-        self.people_info = DataFrame(rosas_productions, columns=['first name', 'name', 'function', 'production id'])
-        self.people_info["full name"] = self.people_info[['first name', 'name']].apply(lambda x: ' '.join(x), axis=1)
-        self.people_info.drop(['first name', 'name'], axis=1, inplace=True)
+        self.people_info = DataFrame(rosas_productions, columns=['full name', 'function', 'production id'])
 
     def get_kp_metadata_organisaties_for_viaa_id(self, viaa_id):
         """
@@ -116,7 +125,6 @@ class KP2VIAA(object):
         rosas_productions = cur.fetchall()
         self.organisations_info = DataFrame(rosas_productions, columns=['organisatie', 'functie'])
 
-
     def get_kp_metadata_genres_for_viaa_id(self, viaa_id):
         """
         Return the KP metadata about the genre based on the VIAA ID
@@ -138,7 +146,6 @@ class KP2VIAA(object):
         rosas_productions = cur.fetchall()
         self.genre_info = DataFrame(rosas_productions, columns=['Voorstelling','Genre'])
 
-
     def get_kp_metadata_languages_for_viaa_id(self, viaa_id):
         """
         Creates class variable containing DataFrame with kp metadata about languages based on the viaa id
@@ -159,6 +166,20 @@ class KP2VIAA(object):
         rosas_productions = cur.fetchall()
         self.language_info = DataFrame(rosas_productions, columns=['voorstelling','taal'])
 
+    def consume_api(self, viaa_id):
+        with open(self.path_to_qas_authentication, "r") as f:
+            base64pass = f.read()
+        header = {
+            "Accept": "application/xml",
+            "Authorization": "Basic " + base64pass
+        }
+        url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/{0}".format(viaa_id)
+        r = requests.get(url, headers=header)
+        parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
+        tree = etree.fromstring(r.text.encode("utf-8"), parser=parser)
+        print(etree.tostring(tree, pretty_print=True))
+
+
 
     def read_viaa_xml_to_tree(self):
         """
@@ -166,9 +187,8 @@ class KP2VIAA(object):
         :return: class variable xml tree
         """
         parser = etree.XMLParser(remove_blank_text=True)
-        with open("resources/test_file.xml") as file:   #change this to parameter xml_viaa
-            tree = etree.parse(file, parser)
-            self.tree = tree
+        with open(self.path_to_xml) as file:   #change this to parameter xml_viaa
+            self.tree = etree.parse(file, parser)
 
     def write_kp_general_to_dc_titles(self, name_tag_viaa, tag_kp):
         """
@@ -177,68 +197,65 @@ class KP2VIAA(object):
         :param tag_kp:
         :return:
         """
-        for elements in self.tree.iter('dc_titles'):
-            child = etree.Element(name_tag_viaa)
-            elements.insert(0, child)
-            child.text = self.general_info[tag_kp][0]
+        element = list(self.tree.iter('dc_titles'))[0]
+        child = etree.Element(name_tag_viaa)
+        element.insert(0, child)
+        child.text = self.general_info[tag_kp][0]
 
-    def map_kp_general_to_viaa(self, viaa_id):
+    def map_kp_general_to_viaa(self):
         """
         Reads the general DataFrame and maps this to an XML format
         :return: XML tags for <reeks>, <serie>, <seizoen>
         """
-        self.get_kp_metadata_for_viaa_id(viaa_id)  #if rerun = None pass?!
+        self.ensure_element_exists('dc_titles')
+        self.write_kp_general_to_dc_titles("serie", "name")
+        self.write_kp_general_to_dc_titles("seizoen", "season")
+        self.write_kp_general_to_dc_titles("reeks", "rerun")
 
-            #(self.tree.find(".//dc_titles").tag)
-        test = self.tree.xpath('//dc_titles')
-        if test != []:
-            if self.general_info["rerun"][0] == None:
-                self.write_kp_general_to_dc_titles("serie", "name")
-                self.write_kp_general_to_dc_titles("seizoen","season")
-            else:
-                self.write_kp_general_to_dc_titles("serie", "name")
-                self.write_kp_general_to_dc_titles("seizoen","season")
-                self.write_kp_general_to_dc_titles("reeks","rerun")
-        else:
-            for elements in self.tree.iter("MDProperties"):
-                child = etree.Element("dc_titles")
-                elements.insert(0, child)
-            if self.general_info["rerun"][0] == None:
-                self.write_kp_general_to_dc_titles("serie", "name")
-                self.write_kp_general_to_dc_titles("seizoen", "season")
-            else:
-                self.write_kp_general_to_dc_titles("serie", "name")
-                self.write_kp_general_to_dc_titles("seizoen", "season")
-                self.write_kp_general_to_dc_titles("reeks", "rerun")
-        # except:
+    def ensure_element_exists(self, element_name):
+        elements = self.tree.xpath('//' + element_name)
+        if len(elements) == 0:
+            element = list(self.tree.iter("MDProperties"))[0]
+            child = etree.Element(element_name)
+            element.insert(0, child)
 
-
-
-    def map_kp_persons_to_viaa_makers(self,viaa_id):
+    def map_kp_persons_to_viaa_makers(self, viaa_id):
         """
         Matches the functions from the kp persons dataframe to the viaa "Makers" functions based on the mapping
         from the metadata_mapping.json
         :param viaa_id:
         :return: XML tags for <dc_creators type="list">
         """
-        self.get_kp_metadata_for_viaa_id(viaa_id)
-        self.get_kp_metadata_personen_for_viaa_id(viaa_id)
-        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
-            mapping_functies = load(f)
-        for elements in self.tree.iter("dc_creators"):
-            for item in mapping_functies["Maker"]:
-                for functie in mapping_functies["Maker"][item]:
-                    for i in range(len(self.people_info["full name"])):
-                        if self.people_info["function"][i] == functie:
-                            #print "<{0}>{1}</{0}>".format(item, self.people_info["full name"][i])
-                            if self.people_info["full name"][i] == "Muriel Hérault":  #encoding problems!
-                                pass
-                            else:
-                                child = etree.Element(item)
-                                elements.insert(0, child)
-                                child.text = self.people_info["full name"][i]
-                            #print(etree.tostring(elements, pretty_print=True))
 
+        element = list(self.tree.iter('dc_creators'))[0]
+
+        for row in self.people_info.iterrows():
+            full_name = row[1]["full name"]
+            kp_function = row[1]["function"]
+            viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
+            if viaa_function_level == "Maker":
+                if full_name == "Muriel Hérault":  # encoding problems!
+                    pass
+                else:
+                    child = etree.Element(viaa_function)
+                    element.insert(0, child)
+                    child.text = full_name
+
+    def map_kp_function_to_viaa_function(self, functie):
+        with open(self.path_metadata_mapping, "r", "utf-8") as f:
+            mapping_functies = load(f)
+        for viaa_functie in mapping_functies["Maker"]:
+            for kp_functie in mapping_functies["Maker"][viaa_functie]:
+                if functie == kp_functie:
+                    return "Maker", viaa_functie
+                else:
+                    pass
+        for viaa_functie in mapping_functies["Bijdrager"]:
+            for kp_functie in mapping_functies["Bijdrager"][viaa_functie]:
+                if functie == kp_functie:
+                    return "Bijdrager", viaa_functie
+                else:
+                    pass
 
 
     def map_kp_persons_to_viaa_contributors(self,viaa_id):
@@ -248,9 +265,9 @@ class KP2VIAA(object):
         :param viaa_id:
         :return: XML tags for <dc_contributors type="list">
         """
-        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_general_for_viaa_id(viaa_id)
         self.get_kp_metadata_personen_for_viaa_id(viaa_id)
-        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+        with open(self.path_metadata_mapping, "r", "utf-8") as f:
             mapping_functies = load(f)
         try:
             (self.tree.find(".//dc_contributors").tag)
@@ -286,9 +303,9 @@ class KP2VIAA(object):
         :return: XML tags for <dc_creators type="list">
         """
 
-        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_general_for_viaa_id(viaa_id)
         self.get_kp_metadata_organisaties_for_viaa_id(viaa_id)
-        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+        with open(self.path_metadata_mapping, "r", "utf-8") as f:
             mapping_functies = load(f)
         for elements in self.tree.iter("dc_creators"):
             for item in mapping_functies["Maker"]:
@@ -308,9 +325,9 @@ class KP2VIAA(object):
         :param viaa_id:
         :return: XML tags for <dc_contributors type="list">
         """
-        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_general_for_viaa_id(viaa_id)
         self.get_kp_metadata_organisaties_for_viaa_id(viaa_id)
-        with open("resources/metadata_mapping.json", "r", "utf-8") as f:
+        with open(self.path_metadata_mapping, "r", "utf-8") as f:
             mapping_functies = load(f)
         for elements in self.tree.iter("dc_contributors"):
             for item in mapping_functies["Bijdrager"]:
@@ -330,7 +347,7 @@ class KP2VIAA(object):
         :param viaa_id:
         :return: XML tags for genres.
         """
-        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_general_for_viaa_id(viaa_id)
         self.get_kp_metadata_genres_for_viaa_id(viaa_id)
         with open("resources/genres_mapping.json", "r", "utf-8") as f:
             mapping_genres = load(f)
@@ -373,7 +390,7 @@ class KP2VIAA(object):
         :param viaa_id:
         :return: XML tags for languages.
         """
-        self.get_kp_metadata_for_viaa_id(viaa_id)
+        self.get_kp_metadata_general_for_viaa_id(viaa_id)
         self.get_kp_metadata_languages_for_viaa_id(viaa_id)
         with open("resources/languages_mapping.json", "r", "utf-8") as f:
             mapping_languages = load(f)
@@ -382,6 +399,9 @@ class KP2VIAA(object):
                 for i in range(len(self.language_info["taal"])):
                     if self.language_info["taal"][i] == language:
                         print "<multiselect>{0}</multiselect>".format(self.language_info["taal"][i])
+
+
+
 
 
     def map_kp_to_viaa(self,viaa_id):
@@ -427,4 +447,5 @@ if __name__ == "__main__":
     kp2viaa.map_kp_organisations_to_viaa_makers("viaa_id")
     kp2viaa.map_kp_genres_to_viaa_genres("viaa_id")
     kp2viaa.map_kp_to_viaa("viaa_id")
+
 
