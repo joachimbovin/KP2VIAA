@@ -14,7 +14,8 @@ class KP2VIAATests(TestCase):
         self.kp2viaa = KP2VIAA(path_to_dbcfg="../resources/db.cfg",
                                path_to_viaa2kp="../resources/viaa_id_testcase.json",
                                path_to_xml="../resources/test_file.xml",
-                               path_metadata_mapping="../resources/metadata_mapping.json")
+                               path_metadata_mapping="../resources/metadata_mapping.json",
+                               path_to_qas_auth="../resources/qasviaaauthenticationbase64.txt")
         self.maxDiff = None
 
     def test_map_kp_general_to_dc_titles(self):
@@ -106,4 +107,5 @@ class KP2VIAATests(TestCase):
         self.assertTrue(self.kp2viaa.language_info.equals(mozart_metadata_expected))
 
     def test_consume_api(self):
-        self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
+        #self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
+        self.kp2viaa.consume_api("bv79s1r49d")

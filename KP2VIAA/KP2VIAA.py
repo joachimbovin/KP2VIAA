@@ -18,7 +18,7 @@ class KP2VIAA(object):
         self.path_to_viaa2kp_mapping = path_to_viaa2kp
         self.path_to_xml = path_to_xml
         self.path_metadata_mapping = path_metadata_mapping
-        self.path_to_qas_auth=path_to_qas_auth
+        self.path_to_qas_auth = path_to_qas_auth
         self.viaa_id_to_kp_productie_show_id_mapping = None
         self.path_to_dbcfg = path_to_dbcfg
         self.cfg = ConfigParser()
@@ -167,13 +167,14 @@ class KP2VIAA(object):
         self.language_info = DataFrame(rosas_productions, columns=['voorstelling','taal'])
 
     def consume_api(self, viaa_id):
-        with open(self.path_to_qas_authentication, "r") as f:
+        with open(self.path_to_qas_auth, "r") as f:
             base64pass = f.read()
         header = {
             "Accept": "application/xml",
             "Authorization": "Basic " + base64pass
         }
-        url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/{0}".format(viaa_id)
+        #url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/{0}".format(viaa_id)
+        url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/?q=%2B(MediaObjectFragmentPID:{0})".format(viaa_id)
         r = requests.get(url, headers=header)
         parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
         tree = etree.fromstring(r.text.encode("utf-8"), parser=parser)
