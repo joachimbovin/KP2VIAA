@@ -15,6 +15,8 @@ class KP2VIAATests(TestCase):
                                path_to_viaa2kp="../resources/viaa_id_testcase.json",
                                path_to_xml="../resources/test_file.xml",
                                path_metadata_mapping="../resources/metadata_mapping.json",
+                               path_genres_mapping="../resources/genres_mapping.json",
+                               path_languages_mapping="../resources/languages_mapping.json",
                                path_to_qas_auth="../resources/qasviaaauthenticationbase64.txt")
         self.maxDiff = None
 
@@ -25,6 +27,8 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.ensure_element_exists("dc_titles")
         self.kp2viaa.map_kp_general_to_viaa()
         self.assertTrue(len(self.kp2viaa.tree.xpath("//seizoen")), 1)
+        print(etree.tostring(self.kp2viaa.tree, pretty_print=True))
+
 
     def test_ensure_element_exists(self):
         self.kp2viaa.read_viaa_xml_to_tree()
@@ -38,6 +42,54 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.ensure_element_exists("dc_creators")
         self.kp2viaa.map_kp_persons_to_viaa_makers("viaa_id")
         self.assertEqual(self.kp2viaa.tree.xpath("//Choreograaf")[0].text, "Anne Teresa De Keersmaeker")
+
+    def test_map_kp_persons_to_viaa_contributors(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists('dc_contributors')
+        self.kp2viaa.map_kp_persons_to_viaa_contributors("viaa_id")
+        self.assertEqual(self.kp2viaa.tree.xpath("//Dirigent")[0].text, "Philippe Herreweghe")
+        print(etree.tostring(self.kp2viaa.tree, pretty_print=True))
+
+    def test_map_kp_organisations_to_viaa_makers(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists('dc_creators')
+        self.kp2viaa.map_kp_organisations_to_viaa_makers("viaa_id")
+        self.assertEqual(self.kp2viaa.tree.xpath("//Maker")[0].text, "Rosas")
+        print(etree.tostring(self.kp2viaa.tree, pretty_print=True))
+
+
+    #no test for organisations to viaa contributors because for this there is no relevant metadata
+
+    def test_map_kp_organisations_to_viaa_makers(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists('dc_contributors')
+        self.kp2viaa.map_kp_organisations_to_viaa_contributors("viaa_id")
+        print(etree.tostring(self.kp2viaa.tree, pretty_print=True))
+
+
+    def test_map_kp_genres_to_viaa_genres(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists('dc_types')
+        self.kp2viaa.write_kp_genres_to_viaa_genres("viaa_id")
+        print(etree.tostring(self.kp2viaa.tree, pretty_print=True))
+
+
+    def test_map_kp_languages_to_viaa_languages(self):
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_languages_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists("dc_languages")
+        self.kp2viaa.write_kp_languages_to_viaa_languages("viaa_id")
+        print(etree.tostring(self.kp2viaa.tree,pretty_print=True))
+
 
     def test_read_mapping(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
