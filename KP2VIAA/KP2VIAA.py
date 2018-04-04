@@ -181,21 +181,23 @@ class KP2VIAA(object):
         url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/?q=%2B(MediaObjectFragmentPID:{0})".format(viaa_id)
         r = requests.get(url, headers=header)
         parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
-        tree = etree.fromstring(r.text.encode("utf-8"), parser=parser)
-        print(etree.tostring(tree, pretty_print=True))
+        self.mediahaven_xml = etree.fromstring(r.text.encode("utf-8"), parser=parser)
+        #print(etree.tostring(self.mediahaven_xml, pretty_print=True))
+        #self.consume_api = tree
 
     def read_viaa_xml_to_tree(self):
         """
         Reads the viaa xml file to a xml tree
         :return: class variable xml tree
         """
-        parser = etree.XMLParser(remove_blank_text=True)
-        with open(self.path_to_xml) as file:   #change this to parameter xml_viaa
-            self.tree = etree.parse(file, parser)
+        #parser = etree.XMLParser(remove_blank_text=True)
+        #with open(self.path_to_xml) as file:   #change this to parameter xml_viaa
+        #    self.tree = etree.parse(file, parser)
+        self.tree = etree.Element("MediaHAVEN_external_metadata")
+        self.tree.append(etree.Element("MDProperties"))
 
     def write_kp_general_to_dc_titles(self, name_tag_viaa, tag_kp):
         """
-
         :param name_tag_viaa:
         :param tag_kp:
         :return:
@@ -244,6 +246,11 @@ class KP2VIAA(object):
                     child.text = full_name
 
     def map_kp_function_to_viaa_function(self, functie):
+        """
+        Maps a kp function to the corresponding viaa function using metadata_mapping.json
+        :param functie:
+        :return: 2 variables = "Maker" or Bijdrager AND viaa_functie
+        """
         with open(self.path_metadata_mapping, "r", "utf-8") as f:
             mapping_functies = load(f)
         for viaa_functie in mapping_functies["Maker"]:
@@ -293,7 +300,8 @@ class KP2VIAA(object):
             full_name = row[1]["organisatie"]
             kp_function = row[1]["functie"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            if viaa_function_level == "Maker":
+            is_in_mediahaven = self.is_in_mediahaven(full_name, viaa_function)
+            if viaa_function_level == "Maker" and not is_in_mediahaven:
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name
@@ -364,10 +372,10 @@ class KP2VIAA(object):
 
     def write_kp_languages_to_viaa_languages(self, viaa_id):
         """
-        writes the languages from the kp DataFrame to the viaa languages based on the mapping
+        writes the languages from the kp DataFrame to the viaa XML based on the mapping
         languages_mapping.json
         :param viaa_id:
-        :return: XML tags for languages.
+        :return: XML tags for languages. <dc_languages> <multiselect> nl </multiselect> </dc_languages>
         """
 
         element = list(self.tree.iter('dc_languages'))[0]
@@ -380,7 +388,84 @@ class KP2VIAA(object):
                 viaa_language = self.map_kp_genres_to_viaa_genres(kp_taal)
                 child = etree.Element("multiselect")
                 element.insert(0, child)
-                child.text = viaa_language    #?!
+                child.text = viaa_language    #?!  why not [0]?
+
+    def is_in_mediahaven(self, viaa_name, viaa_function):
+        name = self.mediahaven_xml.xpath('.//value[text()="{0}"]'.format(viaa_name))
+        function = self.mediahaven_xml.xpath('.//key[text()="{0}"]'.format(viaa_function))
+        if len(name) == 0:
+            return None, None
+        else:
+            return name[0].text, function[0].text
+
+    def compare_mediahaven_kunstenpunt(self, viaa_name, viaa_function):
+        mediahaven_name, mediahaven_function = self.is_in_mediahaven(viaa_name, viaa_function)
+        if mediahaven_name is None:
+            return False
+        elif mediahaven_name == viaa_name and mediahaven_function == viaa_function:
+            return True
+        else:
+            return False
+
+
+
+
+
+    def mediahaven_find_text_test(self):
+        full_name = self.mediahaven_xml.xpath('.//value[text()="VIAA-ONDERWIJS"]')
+        print full_name[0].text
+        print full_name[0].tag
+
+    def test_if_PID_unique(self): #!!
+
+        if int(self.mediahaven_xml[0].text) == 1:
+            print "OK!"
+        else:
+            print "Error!"
+
+    def get_title_mediahaven(self):
+
+        element = list(self.tree.iter('MediaHAVEN_external_metadata'))[0]
+
+        title = list(self.mediahaven_xml.xpath('//title'))[0]
+        child = etree.Element("title")
+        element.insert(0, child)
+        child.text = title.text
+
+
+
+    # def get_properties_mediahaven(self, tag):
+    #
+    #     for item in self.mediahaven_xml.iter("mdProperties"):
+    #     for child in item:
+    # #
+    #     MDproperties = etree.Element("MDproperties")
+    #     elements = self.tree.xpath('//' + tag)
+    #         if len(elements) == 0:
+    #             pass
+    #         else:
+    #             for child in elements:
+    #                 MDproperties.append (etree.Element())
+    #
+    #
+    #             #if child[0].text == "dc"
+    #             #print "<{0}>{1}<{0}>".format(child[0].text, child[1].text)
+    #
+    #
+    #     elements = self.tree.xpath('//' + element_name)
+    #     if len(elements) == 0:
+    #         element = list(self.tree.iter("MDProperties"))[0]
+    #         child = etree.Element(element_name)
+    #         element.insert(0, child)
+
+    #
+    # def write_mediahaven_xml_to_viaa_xml(self):
+    #     self.mediahaven_xml.iter("title")
+
+
+
+
+
 
     def map_kp_to_viaa(self,viaa_id):
         """
@@ -394,19 +479,6 @@ class KP2VIAA(object):
         #with open("resources/metadata_mapping.json", "r", "utf-8") as f:
         #    mapping = load(f)
         #print(dumps(mapping, indent=4))
-
-        # self.map_kp_general_to_viaa(viaa_id)
-        # print "<dc_creators type='list'>"
-        # self.map_kp_persons_to_viaa_makers(viaa_id)
-        # self.map_kp_organisations_to_viaa_makers(viaa_id)
-        # print "</dc_creators>"
-        # print "<dc_contributors type='list'>"
-        # self.map_kp_persons_to_viaa_contributors(viaa_id)
-        # self.map_kp_organisations_to_viaa_contributors(viaa_id)
-        # print "</dc_contributors>"
-        # print "<dc_types type='list'>"
-        # self.map_kp_genres_to_viaa_genres(viaa_id)
-        # print "</dc_types>"
 
 
 

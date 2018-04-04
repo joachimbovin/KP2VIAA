@@ -42,6 +42,8 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.ensure_element_exists("dc_creators")
         self.kp2viaa.map_kp_persons_to_viaa_makers("viaa_id")
         self.assertEqual(self.kp2viaa.tree.xpath("//Choreograaf")[0].text, "Anne Teresa De Keersmaeker")
+        print(etree.tostring(self.kp2viaa.tree, pretty_print=True))
+
 
     def test_map_kp_persons_to_viaa_contributors(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
@@ -90,6 +92,24 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.write_kp_languages_to_viaa_languages("viaa_id")
         print(etree.tostring(self.kp2viaa.tree,pretty_print=True))
 
+    def test_write_all(self):
+        self.kp2viaa.get_kp_metadata_general_for_viaa_id("viaa_id")
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.ensure_element_exists("dc_titles")
+        self.kp2viaa.ensure_element_exists('dc_creators')
+        self.kp2viaa.ensure_element_exists('dc_contributors')
+        self.kp2viaa.ensure_element_exists('dc_types')
+        self.kp2viaa.ensure_element_exists("dc_languages")
+        self.kp2viaa.map_kp_general_to_viaa()
+        self.kp2viaa.map_kp_persons_to_viaa_makers("viaa_id")
+        self.kp2viaa.map_kp_persons_to_viaa_contributors("viaa_id")
+        self.kp2viaa.map_kp_organisations_to_viaa_makers("viaa_id")
+        self.kp2viaa.map_kp_organisations_to_viaa_contributors("viaa_id")
+        self.kp2viaa.write_kp_genres_to_viaa_genres("viaa_id")
+        self.kp2viaa.write_kp_languages_to_viaa_languages("viaa_id")
+        print(etree.tostring(self.kp2viaa.tree,pretty_print=True))
 
     def test_read_mapping(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
@@ -161,3 +181,21 @@ class KP2VIAATests(TestCase):
     def test_consume_api(self):
         #self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
         self.kp2viaa.consume_api("bv79s1r49d")
+
+    def test_test_PID(self):   #!!!
+        self.kp2viaa.consume_api("bv79s1r49d")
+        self.kp2viaa.test_if_PID_unique()
+
+    def test_append_title(self):
+        self.kp2viaa.consume_api("bv79s1r49d")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.get_title_mediahaven()
+        print(etree.tostring(self.kp2viaa.tree, pretty_print=True))
+
+    def test_find_mediahaven(self):
+        self.kp2viaa.consume_api("bv79s1r49d")
+        self.kp2viaa.read_viaa_xml_to_tree()
+        self.kp2viaa.is_in_mediahaven("Anne Teresa De Keersmaeker" , "choreografie")
+
+
+
