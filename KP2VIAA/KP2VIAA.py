@@ -185,7 +185,7 @@ class KP2VIAA(object):
         #print(etree.tostring(self.mediahaven_xml, pretty_print=True))
         #self.consume_api = tree
 
-    def read_viaa_xml_to_tree(self):
+    def read_viaa_xml_to_tree(self):   #rename to create viaa xml tree
         """
         Reads the viaa xml file to a xml tree
         :return: class variable xml tree
@@ -237,13 +237,16 @@ class KP2VIAA(object):
             full_name = row[1]["full name"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            if viaa_function_level == "Maker":
-                if full_name == "Muriel Hérault":  # encoding problems!
-                    pass
+            if full_name == "Muriel Hérault":  # encoding problems!
+                pass
+            else:
+                is_in_mediahaven = self.compare_mediahaven_kunstenpunt(full_name, viaa_function)
+                if viaa_function_level == "Maker" and is_in_mediahaven is False:
+                        child = etree.Element(viaa_function)
+                        element.insert(0, child)
+                        child.text = full_name
                 else:
-                    child = etree.Element(viaa_function)
-                    element.insert(0, child)
-                    child.text = full_name
+                    pass
 
     def map_kp_function_to_viaa_function(self, functie):
         """
@@ -281,10 +284,13 @@ class KP2VIAA(object):
             full_name = row[1]["full name"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            if viaa_function_level == "Bijdrager":
+            is_in_mediahaven = self.compare_mediahaven_kunstenpunt(full_name, viaa_function)
+            if viaa_function_level == "Bijdrager" and is_in_mediahaven is False:
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name
+            else:
+                pass
 
     def map_kp_organisations_to_viaa_makers(self, viaa_id):
         """
@@ -301,10 +307,12 @@ class KP2VIAA(object):
             kp_function = row[1]["functie"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
             is_in_mediahaven = self.is_in_mediahaven(full_name, viaa_function)
-            if viaa_function_level == "Maker" and not is_in_mediahaven:
+            if viaa_function_level == "Maker" and is_in_mediahaven is False:
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name
+            else:
+                pass
 
     def map_kp_organisations_to_viaa_contributors(self, viaa_id):
         """
@@ -320,10 +328,13 @@ class KP2VIAA(object):
             full_name = row[1]["organisatie"]
             kp_function = row[1]["functie"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            if viaa_function_level == "Bijdrager":
+            is_in_mediahaven = self.compare_mediahaven_kunstenpunt(full_name, viaa_function)
+            if viaa_function_level == "Bijdrager" and is_in_mediahaven is False:
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name
+            else:
+                pass
 
     def map_kp_genres_to_viaa_genres(self, genre):
         """
@@ -393,8 +404,12 @@ class KP2VIAA(object):
     def is_in_mediahaven(self, viaa_name, viaa_function):
         name = self.mediahaven_xml.xpath('.//value[text()="{0}"]'.format(viaa_name))
         function = self.mediahaven_xml.xpath('.//key[text()="{0}"]'.format(viaa_function))
-        if len(name) == 0:
+        if len(name) == 0 and len(function) == 0:
             return None, None
+        elif len(name) != 0 and len(function) == 0:
+            return name[0].text, None
+        elif len(name) == 0 and len(function) != 0:
+            return None, function[0].text
         else:
             return name[0].text, function[0].text
 
@@ -407,15 +422,6 @@ class KP2VIAA(object):
         else:
             return False
 
-
-
-
-
-    def mediahaven_find_text_test(self):
-        full_name = self.mediahaven_xml.xpath('.//value[text()="VIAA-ONDERWIJS"]')
-        print full_name[0].text
-        print full_name[0].tag
-
     def test_if_PID_unique(self): #!!
 
         if int(self.mediahaven_xml[0].text) == 1:
@@ -426,7 +432,6 @@ class KP2VIAA(object):
     def get_title_mediahaven(self):
 
         element = list(self.tree.iter('MediaHAVEN_external_metadata'))[0]
-
         title = list(self.mediahaven_xml.xpath('//title'))[0]
         child = etree.Element("title")
         element.insert(0, child)
