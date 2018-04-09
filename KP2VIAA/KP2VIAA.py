@@ -15,7 +15,8 @@ class KP2VIAA(object):
                  path_metadata_mapping="resources/metadata_mapping.json",
                  path_genres_mapping="resources/genres_mapping.json",
                  path_languages_mapping="resources/languages_mapping.json",
-                 path_to_qas_auth="resources/qasviaaauthenticationbase64.txt"):
+                 path_to_qas_auth="resources/qasviaaauthenticationbase64.txt",
+                 path_to_xsd = "resources/viaa_metadatamodel_van_viaa_naar_mam.xsd"):
         self.path_to_viaa2kp_mapping = path_to_viaa2kp
         self.path_metadata_mapping = path_metadata_mapping
         self.path_genres_mapping = path_genres_mapping
@@ -23,6 +24,7 @@ class KP2VIAA(object):
         self.path_to_qas_auth = path_to_qas_auth
         self.viaa_id_to_kp_productie_show_id_mapping = None
         self.path_to_dbcfg = path_to_dbcfg
+        self.path_to_xsd = path_to_xsd
         self.cfg = ConfigParser()
         self.cfg.read(self.path_to_dbcfg)
         self.knst = psycopg2.connect(host=self.cfg['db']['host'],
@@ -189,6 +191,9 @@ class KP2VIAA(object):
         """
         self.update_tree = etree.Element("MediaHAVEN_external_metadata")
         self.update_tree.append(etree.Element("MDProperties"))
+
+
+
 
     def ensure_element_exists(self, element_name):
         elements = self.update_tree.xpath('//' + element_name)
@@ -427,6 +432,34 @@ class KP2VIAA(object):
         child = etree.Element("title")
         element.insert(0, child)
         child.text = title.text
+
+    def validate_updated_tree_to_VIAA_xsd(self):
+
+        #parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
+        #viaa_xsd = etree.fromstring(r.text.encode("utf-8"), parser=parser)
+        element = list(self.update_tree.iter("MDProperties"))[0]
+        child = etree.Element("CP")
+        child2 = etree.Element("CP_id")
+        child3 = etree.Element("PID")
+        child4 = etree.Element("dc_source")
+        child5 = etree.Element("dc_relations")
+        #child6 = etree.Element("dc_identifier_localid")
+        element.insert(0, child)
+        element.insert(1, child2)
+        element.insert(2, child3)
+        element.insert(3, child4)
+        element.insert(4, child5)
+        #element.insert(5, child6)
+        viaa_xmlschema_doc = etree.parse(self.path_to_xsd)
+        viaa_xmlschema = etree.XMLSchema(viaa_xmlschema_doc)
+        #print etree.tostring(viaa_xmlschema_doc)
+        viaa_xmlschema.validate(self.update_tree)
+        log = viaa_xmlschema.error_log
+        error = log.last_error
+        print log
+
+
+
 
     def send_update_tree_to_viaa(self):
         """

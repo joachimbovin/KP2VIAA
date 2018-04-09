@@ -16,7 +16,8 @@ class KP2VIAATests(TestCase):
                                path_metadata_mapping="../resources/metadata_mapping.json",
                                path_genres_mapping="../resources/genres_mapping.json",
                                path_languages_mapping="../resources/languages_mapping.json",
-                               path_to_qas_auth="../resources/qasviaaauthenticationbase64.txt")
+                               path_to_qas_auth="../resources/qasviaaauthenticationbase64.txt",
+                               path_to_xsd="../resources/viaa_metadatamodel_van_viaa_naar_mam.xsd")
         self.maxDiff = None
 
     def test_map_kp_general_to_dc_titles(self):
@@ -199,8 +200,9 @@ class KP2VIAATests(TestCase):
     def test_consume_api(self):
         #self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
         self.kp2viaa.consume_api("bv79s1r49d")
+        #print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
 
-    def test_test_PID(self):   #!!!
+    def test_test_PID(self):
         self.kp2viaa.consume_api("bv79s1r49d")
         self.kp2viaa.test_if_PID_unique()
 
@@ -348,6 +350,12 @@ class KP2VIAATests(TestCase):
 
 
 
+
+    def test_validate_kp_input_to_viaa_xsd(self):
+
+        self.test_write_all()
+        #self.kp2viaa.validate_updated_tree_to_VIAA_xsd()
+        self.assertTrue(self.kp2viaa.validate_updated_tree_to_VIAA_xsd())
 
 
 
