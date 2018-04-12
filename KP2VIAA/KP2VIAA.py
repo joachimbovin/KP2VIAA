@@ -61,7 +61,7 @@ class KP2VIAA(object):
         :return: a cursor object to interact with the MySQL server using a MySQLConnection object.
         """
         cur = self.knst.cursor()
-        return cur   #do I still have to return cur?
+        return cur
 
     def get_kp_metadata_general_for_viaa_id(self, viaa_id):
         """
@@ -193,7 +193,32 @@ class KP2VIAA(object):
         self.update_tree.append(etree.Element("MDProperties"))
 
 
+    def validate_xml_viaa_xsd(self):
+        """
+        Create a number of elements and add to update_tree to validate based on viaa xsd + insert
+        tags with specific content on specific information
+        :return:  /
+        """
+        tags = ["CP", "CP_id", "PID", "dc_source", "dc_relations", "dc_identifier_localid", "dc_identifier_localids", "dc_title",
+               "dc_titles", "dcterms_issued","dcterms_created", "dc_creators", "dc_contributors", "dc_publishers", "dc_subjects", "dc_types",
+               "dc_coverages", "dc_languages", "dc_rights_licenses", "dc_rights_rightsOwners", "dc_rights_rightsHolders"]
+        for item in tags:
+           self.insert_tags_xml("MDProperties", item, tags.index(item))
 
+        contentnav = self.update_tree.find(".//dc_identifier_localids")
+        child = etree.Element("md5")
+        contentnav.addnext(child)
+        child.text = "73fc87dc8bce8cdc244d2dc95ad576ff"
+        contentnav_2 = self.update_tree.find(".//dcterms_created")
+        child = etree.Element("CreationDate")
+        contentnav_2.addnext(child)
+        child.text = "1992:08:21 00:00:00"
+
+
+    def insert_tags_xml(self, parent_tag, child_tag, index):
+        element = list(self.update_tree.iter(parent_tag))[0]
+        child = etree.Element(child_tag)
+        element.insert(index, child)
 
     def ensure_element_exists(self, element_name):
         elements = self.update_tree.xpath('//' + element_name)
@@ -223,7 +248,10 @@ class KP2VIAA(object):
         self.ensure_element_exists('dc_titles')
         self.map_kp_general_to_dc_titles("serie", "name")
         self.map_kp_general_to_dc_titles("seizoen", "season")
-        self.map_kp_general_to_dc_titles("reeks", "rerun")
+        if self.general_info["rerun"][0] is None:
+            pass
+        else:
+            self.map_kp_general_to_dc_titles("reeks", "rerun")
 
     def map_kp_function_to_viaa_function(self, functie):
         """
@@ -359,7 +387,7 @@ class KP2VIAA(object):
         for row in self.genre_info.iterrows():
             kp_genre = row[1]["genre"]
             viaa_genre = self.map_kp_genres_to_viaa_genres(kp_genre)
-            child = etree.Element("genre")
+            child = etree.Element("multiselect")
             element.insert(0, child)
             child.text = viaa_genre.decode("utf-8")    #?!
 
@@ -398,7 +426,15 @@ class KP2VIAA(object):
                 element.insert(0, child)
                 child.text = viaa_language.decode("utf-8")    #?!  why not [0]?
 
-    def is_in_mediahaven(self, viaa_name, viaa_function):
+    def is_in_mediahaven(self, viaa_name, viaa_function): # TO DO change this method so that it specifically searches for a name and the next
+        #element (=the function), now it just searches the entire document!!!
+        """
+        Searches the VIAA XML for name and function based on parameters and sends this to
+        compare_mediahaven_kunstenpunt
+        :param viaa_name:
+        :param viaa_function:
+        :return: ...
+        """
         name = self.mediahaven_xml.xpath(u'.//value[text()="' + viaa_name.decode("utf-8") + u'"]')
         function = self.mediahaven_xml.xpath(u'.//key[text()="' + viaa_function.decode("utf-8") + u'"]')
         if len(name) == 0 and len(function) == 0:
@@ -437,19 +473,6 @@ class KP2VIAA(object):
 
         #parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
         #viaa_xsd = etree.fromstring(r.text.encode("utf-8"), parser=parser)
-        element = list(self.update_tree.iter("MDProperties"))[0]
-        child = etree.Element("CP")
-        child2 = etree.Element("CP_id")
-        child3 = etree.Element("PID")
-        child4 = etree.Element("dc_source")
-        child5 = etree.Element("dc_relations")
-        #child6 = etree.Element("dc_identifier_localid")
-        element.insert(0, child)
-        element.insert(1, child2)
-        element.insert(2, child3)
-        element.insert(3, child4)
-        element.insert(4, child5)
-        #element.insert(5, child6)
         viaa_xmlschema_doc = etree.parse(self.path_to_xsd)
         viaa_xmlschema = etree.XMLSchema(viaa_xmlschema_doc)
         #print etree.tostring(viaa_xmlschema_doc)

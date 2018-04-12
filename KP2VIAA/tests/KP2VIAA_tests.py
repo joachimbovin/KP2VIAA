@@ -9,6 +9,8 @@ from codecs import open
 from lxml import etree
 
 
+
+
 class KP2VIAATests(TestCase):
     def setUp(self):
         self.kp2viaa = KP2VIAA(path_to_dbcfg="../resources/db.cfg",
@@ -107,7 +109,7 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.ensure_element_exists('dc_contributors')
         self.kp2viaa.ensure_element_exists('dc_types')
         self.kp2viaa.ensure_element_exists("dc_languages")
-        self.kp2viaa.get_title_mediahaven()
+        #self.kp2viaa.get_title_mediahaven()    # laten vallen!
         self.kp2viaa.write_kp_general_to_update_tree()
         self.kp2viaa.write_kp_persons_to_viaa_makers()
         self.kp2viaa.write_kp_persons_to_viaa_contributors()
@@ -200,7 +202,7 @@ class KP2VIAATests(TestCase):
     def test_consume_api(self):
         #self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
         self.kp2viaa.consume_api("bv79s1r49d")
-        #print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
+        print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
 
     def test_test_PID(self):
         self.kp2viaa.consume_api("bv79s1r49d")
@@ -220,7 +222,7 @@ class KP2VIAATests(TestCase):
     def test_compare_kp_mediahaven_personen_1(self):
         """
         Existing person and existing function
-        :return: True (don't write)
+        :return: True (don't write) >>> edited to check > should return false but doesn't !!!!!!!!!
         """
         self.kp2viaa.consume_api("bv79s1r49d")
         element = list(self.kp2viaa.mediahaven_xml.iter('mdProperties'))[0]
@@ -231,8 +233,12 @@ class KP2VIAATests(TestCase):
         <key>dc_creators</key>
         <value>
         <value>
-        <key>Choreograaf</key>
+        <key>Danser</key>
         <value>Anne Teresa De Keersmaeker</value>
+        </value>
+        <value>
+        <key>Choreograaf</key>
+        <value>Tom Ruette</value>
         </value>
         </value>
         </mdProperty>
@@ -240,8 +246,9 @@ class KP2VIAATests(TestCase):
         for item in new_person:
             element.append(item)
         #print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
+        #self.kp2viaa.is_in_mediahaven("Anne Teresa De Keersmaeker", "Choreograaf")
         self.assertTrue(self.kp2viaa.compare_mediahaven_kunstenpunt("Anne Teresa De Keersmaeker", "Choreograaf"))
-
+        #SHOULD RETURN FALSE!
 
     def test_compare_kp_mediahaven_personen_2(self):
         """
