@@ -202,7 +202,7 @@ class KP2VIAATests(TestCase):
     def test_consume_api(self):
         #self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
         self.kp2viaa.consume_api("bv79s1r49d")
-        print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
+        #print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
 
     def test_test_PID(self):
         self.kp2viaa.consume_api("bv79s1r49d")
@@ -363,6 +363,11 @@ class KP2VIAATests(TestCase):
         self.test_write_all()
         #self.kp2viaa.validate_updated_tree_to_VIAA_xsd()
         self.assertTrue(self.kp2viaa.validate_updated_tree_to_VIAA_xsd())
+
+    def test_get_mediahaven_fragmentID(self):
+
+        self.kp2viaa.consume_api("bv79s1r49d")
+        self.kp2viaa.get_mediahaven_fragmentId()
 
 
 

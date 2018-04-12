@@ -472,23 +472,27 @@ class KP2VIAA(object):
         Gets title from mediahaven xml and adds to update_tree, do not use!
         :return:
         """
-
         element = list(self.update_tree.iter('MediaHAVEN_external_metadata'))[0]
         title = list(self.mediahaven_xml.xpath('//title'))[0]
         child = etree.Element("title")
         element.insert(0, child)
         child.text = title.text
 
+    def get_mediahaven_fragmentId(self):
+        """
+        Gets fragementID from mediahaven XML
+        :return:
+        """
+        fragmentId = list(self.mediahaven_xml.xpath('//fragmentId'))[0]
+        print fragmentId.text
+
     def validate_updated_tree_to_VIAA_xsd(self):
 
-        #parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
-        #viaa_xsd = etree.fromstring(r.text.encode("utf-8"), parser=parser)
         viaa_xmlschema_doc = etree.parse(self.path_to_xsd)
         viaa_xmlschema = etree.XMLSchema(viaa_xmlschema_doc)
-        #print etree.tostring(viaa_xmlschema_doc)
         viaa_xmlschema.validate(self.update_tree)
         log = viaa_xmlschema.error_log
-        error = log.last_error
+        #error = log.last_error
         print log
 
 
