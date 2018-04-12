@@ -73,15 +73,21 @@ class KP2VIAA(object):
         cur = self.get_access_database()
         kp_productie_id = self.viaa_id_to_kp_productie_show_id_mapping[viaa_id]["kp_productie_id"]
         sql = """
-        SELECT pr.title, seasons.name, pr.rerun_of_id
+        SELECT pr.title, seasons.name, rerun.title, seasons_2.name
         FROM production.productions AS pr
         JOIN production.seasons AS seasons
         ON pr.season_id = seasons.id
+        JOIN production.productions AS rerun
+        ON pr.rerun_of_id = rerun.id
+        JOIN production.seasons AS seasons_2
+        ON rerun.season_id = seasons_2.id
         WHERE pr.id={0}
         """.format(kp_productie_id)
         cur.execute(sql)
         general_info = cur.fetchall()
-        self.general_info = DataFrame(general_info, columns=['name', 'season', 'rerun'])
+        self.general_info = DataFrame(general_info, columns=['name', 'season', 'rerun_title','rerun_season'])
+        self.general_info['rerun'] = self.general_info[['rerun_title', 'rerun_season']].apply(lambda x: ' '.join(x), axis=1)
+        self.general_info = self.general_info.drop(['rerun_title', 'rerun_season'], axis=1)
 
     def get_kp_metadata_personen_for_viaa_id(self, viaa_id):
         """
@@ -263,13 +269,13 @@ class KP2VIAA(object):
             mapping_functies = load(f)
         for viaa_functie in mapping_functies["Maker"]:
             for kp_functie in mapping_functies["Maker"][viaa_functie]:
-                if functie == kp_functie:
+                if functie.decode("utf-8") == kp_functie:
                     return "Maker", viaa_functie
                 else:
                     pass
         for viaa_functie in mapping_functies["Bijdrager"]:
             for kp_functie in mapping_functies["Bijdrager"][viaa_functie]:
-                if functie == kp_functie:
+                if functie.decode("utf-8") == kp_functie:
                     return "Bijdrager", viaa_functie
                 else:
                     pass
@@ -421,7 +427,7 @@ class KP2VIAA(object):
         else:
             for row in self.language_info.iterrows():
                 kp_taal = row[1]["language"]
-                viaa_language = self.map_kp_genres_to_viaa_genres(kp_taal)
+                viaa_language = self.map_kp_languages_to_viaa_languages(kp_taal)
                 child = etree.Element("multiselect")
                 element.insert(0, child)
                 child.text = viaa_language.decode("utf-8")    #?!  why not [0]?
@@ -462,6 +468,10 @@ class KP2VIAA(object):
             print "Error!" # raise user generated error "multiple items found in viaa for pid" (https://docs.python.org/2/tutorial/errors.html#user-defined-exceptions)
 
     def get_title_mediahaven(self):
+        """
+        Gets title from mediahaven xml and adds to update_tree, do not use!
+        :return:
+        """
 
         element = list(self.update_tree.iter('MediaHAVEN_external_metadata'))[0]
         title = list(self.mediahaven_xml.xpath('//title'))[0]
@@ -484,15 +494,32 @@ class KP2VIAA(object):
 
 
 
-    def send_update_tree_to_viaa(self):
+    def send_update_tree_to_viaa(self, viaa_id):
         """
         Reads the Kunstenpunt metadata and appends this to an XML file
         :param viaa_id
         :return: XML file
         """
 
+        # with open(self.path_to_qas_auth, "r") as f:
+        #     base64pass = f.read()
+        # header = {
+        #     "Accept": "application/xml",
+        #     "Authorization": "Basic " + base64pass
+        # }
+
         payload = etree.tostring(self.update_tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
         print payload
+
+        # headers = {'Content-Type': 'text/xml'}
+        # url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/?q=%2B(MediaObjectFragmentPID:{0})".format(viaa_id)
+        #
+        # with open(payload) as xml:
+        #     # Give the object representing the XML file to requests.post.
+        #     r = requests.post(url, data=xml)
+
+
+        #print (r.content);
 
         #with open("resources/metadata_mapping.json", "r", "utf-8") as f:
         #    mapping = load(f)

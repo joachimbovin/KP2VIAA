@@ -118,7 +118,7 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.write_kp_languages_to_viaa_languages()
         self.kp2viaa.write_kp_genres_to_viaa_genres()
         #print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
-        self.kp2viaa.send_update_tree_to_viaa()
+        self.kp2viaa.send_update_tree_to_viaa("viaa_id")
 
     def test_encoding(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
