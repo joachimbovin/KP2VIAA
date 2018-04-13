@@ -187,6 +187,7 @@ class KP2VIAA(object):
         #url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/{0}".format(viaa_id)
         url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/?q=%2B(MediaObjectFragmentPID:{0})".format(viaa_id)
         r = requests.get(url, headers=header)
+        print r
         parser = etree.XMLParser(ns_clean=True, recover=True, encoding="utf-8")
         self.mediahaven_xml = etree.fromstring(r.text.encode("utf-8"), parser=parser)
 
@@ -432,7 +433,7 @@ class KP2VIAA(object):
                 element.insert(0, child)
                 child.text = viaa_language.decode("utf-8")    #?!  why not [0]?
 
-    def is_in_mediahaven(self, viaa_name, viaa_function): # TO DO change this method so that it specifically searches for a name and the next
+    def is_in_mediahaven(self, viaa_name, viaa_function): # TODO change this method so that it specifically searches for a name and the next
         #element (=the function), now it just searches the entire document!!!
         """
         Searches the VIAA XML for name and function based on parameters and sends this to
@@ -484,7 +485,7 @@ class KP2VIAA(object):
         :return:
         """
         fragmentId = list(self.mediahaven_xml.xpath('//fragmentId'))[0]
-        print fragmentId.text
+        return fragmentId.text
 
     def validate_updated_tree_to_VIAA_xsd(self):
 
@@ -498,29 +499,45 @@ class KP2VIAA(object):
 
 
 
-    def send_update_tree_to_viaa(self, viaa_id):
+    def send_update_tree_to_viaa(self):
         """
         Reads the Kunstenpunt metadata and appends this to an XML file
         :param viaa_id
         :return: XML file
         """
-
-        # with open(self.path_to_qas_auth, "r") as f:
-        #     base64pass = f.read()
-        # header = {
-        #     "Accept": "application/xml",
-        #     "Authorization": "Basic " + base64pass
-        # }
-
-        payload = etree.tostring(self.update_tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
-        print payload
-
-        # headers = {'Content-Type': 'text/xml'}
-        # url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/?q=%2B(MediaObjectFragmentPID:{0})".format(viaa_id)
         #
-        # with open(payload) as xml:
-        #     # Give the object representing the XML file to requests.post.
-        #     r = requests.post(url, data=xml)
+        #payload = etree.tostring(self.update_tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
+        # print payload
+        # payload = etree.fromstring('''
+        #         <?xml version='1.0' encoding='utf-8'?>
+        #         <MediaHAVEN_external_metadata>
+        #         <mdProperties>
+        #         </mdProperties>
+        #         </MediaHAVEN_external_metadata>''')
+
+
+
+        with open(self.path_to_qas_auth, "r") as f:
+            base64pass = f.read()
+        header = {
+            'Content-Type': 'application/xml; charset=utf-8',
+            "Authorization": "Basic " + base64pass
+        }
+
+        fragmentId = self.get_mediahaven_fragmentId()
+
+        #headers = {'Content-Type': 'text/xml'}
+        url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/{0}".format(fragmentId)
+
+
+        #with open(payload) as xml:
+            # Give the object representing the XML file to requests.post.
+        #r = requests.post(url, headers=header, data={"metadata":"../resources/test.xml"})
+        #print r
+
+        files = {'metadata': ('../resources/test.xml', open('../resources/test.xml', 'rb'))}
+        res = requests.post(url, files=files, headers=header)
+        print res
 
 
         #print (r.content);
