@@ -16,12 +16,14 @@ class KP2VIAA(object):
                  path_genres_mapping="resources/genres_mapping.json",
                  path_languages_mapping="resources/languages_mapping.json",
                  path_to_qas_auth="resources/qasviaaauthenticationbase64.txt",
-                 path_to_xsd = "resources/viaa_metadatamodel_van_viaa_naar_mam.xsd"):
+                 path_to_xsd = "resources/viaa_metadatamodel_van_viaa_naar_mam.xsd",
+                 path_to_pass_viaa = "resources/pass_viaa.txt"):
         self.path_to_viaa2kp_mapping = path_to_viaa2kp
         self.path_metadata_mapping = path_metadata_mapping
         self.path_genres_mapping = path_genres_mapping
         self.path_languages_mapping = path_languages_mapping
         self.path_to_qas_auth = path_to_qas_auth
+        self.path_to_pass_viaa = path_to_pass_viaa
         self.viaa_id_to_kp_productie_show_id_mapping = None
         self.path_to_dbcfg = path_to_dbcfg
         self.path_to_xsd = path_to_xsd
@@ -77,17 +79,21 @@ class KP2VIAA(object):
         FROM production.productions AS pr
         JOIN production.seasons AS seasons
         ON pr.season_id = seasons.id
-        JOIN production.productions AS rerun
+        LEFT JOIN production.productions AS rerun
         ON pr.rerun_of_id = rerun.id
-        JOIN production.seasons AS seasons_2
+        LEFT JOIN production.seasons AS seasons_2
         ON rerun.season_id = seasons_2.id
         WHERE pr.id={0}
         """.format(kp_productie_id)
         cur.execute(sql)
         general_info = cur.fetchall()
         self.general_info = DataFrame(general_info, columns=['name', 'season', 'rerun_title','rerun_season'])
-        self.general_info['rerun'] = self.general_info[['rerun_title', 'rerun_season']].apply(lambda x: ' '.join(x), axis=1)
-        self.general_info = self.general_info.drop(['rerun_title', 'rerun_season'], axis=1)
+        if self.general_info["rerun_title"][0] == None:
+            self.general_info = self.general_info.drop(['rerun_title', 'rerun_season'], axis=1)
+            self.general_info['rerun'] = None
+        else:
+            self.general_info['rerun'] = self.general_info[['rerun_title', 'rerun_season']].apply(lambda x: ' '.join(x), axis=1)
+            self.general_info = self.general_info.drop(['rerun_title', 'rerun_season'], axis=1)
 
     def get_kp_metadata_personen_for_viaa_id(self, viaa_id):
         """
@@ -544,7 +550,20 @@ class KP2VIAA(object):
 
         #with open("resources/metadata_mapping.json", "r", "utf-8") as f:
         #    mapping = load(f)
-        #print(dumps(mapping, indent=4))
+        #print(dumps(mapping, indent=
+
+
+
+    def send_update_tree_to_viaa_new(self):
+
+        with open(self.path_to_pass_viaa, "r") as f:
+            pass_viaa = f.read()
+        url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e"
+        username = "joachim.bovin@student.kuleuven.be"
+        passwd = pass_viaa
+        files = {'metadata': ('../resources/test.xml', open('../resources/test.xml', 'rb'))}
+        res = requests.post(url, files=files, auth=(username, passwd))
+        print res
 
 
 if __name__ == "__main__":

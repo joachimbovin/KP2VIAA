@@ -19,7 +19,8 @@ class KP2VIAATests(TestCase):
                                path_genres_mapping="../resources/genres_mapping.json",
                                path_languages_mapping="../resources/languages_mapping.json",
                                path_to_qas_auth="../resources/qasviaaauthenticationbase64.txt",
-                               path_to_xsd="../resources/viaa_metadatamodel_van_viaa_naar_mam.xsd")
+                               path_to_xsd="../resources/viaa_metadatamodel_van_viaa_naar_mam.xsd",
+                               path_to_pass_viaa="../resources/pass_viaa.txt")
         self.maxDiff = None
 
     def test_map_kp_general_to_dc_titles(self):
@@ -117,8 +118,8 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.write_kp_organisations_to_viaa_contributors()
         self.kp2viaa.write_kp_languages_to_viaa_languages()
         self.kp2viaa.write_kp_genres_to_viaa_genres()
-        #print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
-        self.kp2viaa.send_update_tree_to_viaa("viaa_id")
+        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
+        #self.kp2viaa.send_update_tree_to_viaa("viaa_id")
 
     def test_encoding(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
@@ -368,12 +369,18 @@ class KP2VIAATests(TestCase):
     def test_get_mediahaven_fragmentID(self):
 
         self.kp2viaa.consume_api("bv79s1r49d")
-        self.kp2viaa.get_mediahaven_fragmentId()
+        id = self.kp2viaa.get_mediahaven_fragmentId()
+        print id
 
     def test_send_to_API(self):
 
         self.kp2viaa.consume_api("bv79s1r49d")
         self.kp2viaa.send_update_tree_to_viaa()
+
+    def test_send_update_tree_to_viaa_new(self):
+
+        self.kp2viaa.send_update_tree_to_viaa_new()
+
 
 
 
