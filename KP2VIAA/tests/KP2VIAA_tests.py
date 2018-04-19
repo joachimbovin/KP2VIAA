@@ -203,7 +203,7 @@ class KP2VIAATests(TestCase):
     def test_consume_api(self):
         #self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
         #self.kp2viaa.consume_api("349a8b45a8bc47fdb214f79794c24994234453a83ff0453cbad2197e23a292a3d423bd21a938495ea0a19c92e2c02bc5")
-        self.kp2viaa.consume_api("s17sn05s9c")
+        self.kp2viaa.consume_api("bv79s1r49d")
         print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
 
     def test_test_PID(self):
@@ -321,8 +321,8 @@ class KP2VIAATests(TestCase):
         </root>''')
         for item in new_person:
             element.append(item)
-        self.assertFalse(self.kp2viaa.compare_mediahaven_kunstenpunt("Anne Teresa De Keersmaeker", "Choreograaf"))
-
+        #self.assertFalse(self.kp2viaa.compare_mediahaven_kunstenpunt("Anne Teresa De Keersmaeker", "Choreograaf"))
+        self.kp2viaa.check_doubles("Anne Teresa De Keersmaeker", "Choreograaf")
 
 
     def test_compare_kp_mediahaven_personen_write_to_xml(self):
@@ -377,9 +377,12 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.consume_api("bv79s1r49d")
         self.kp2viaa.send_update_tree_to_viaa()
 
-    def test_send_update_tree_to_viaa_new(self):
+    def test_write_to_xml(self):
 
-        self.kp2viaa.send_update_tree_to_viaa_new()
+        self.test_write_all()
+        self.kp2viaa.write_tree_to_xml()
+
+
 
 
 
