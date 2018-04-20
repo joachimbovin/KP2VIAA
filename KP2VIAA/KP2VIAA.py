@@ -447,8 +447,6 @@ class KP2VIAA(object):
                 element.insert(0, child)
                 child.text = viaa_language.decode("utf-8")    #?!  why not [0]?
 
-
-
     def test_if_PID_unique(self):
 
         class PIDError(Exception):
