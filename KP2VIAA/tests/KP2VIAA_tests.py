@@ -7,6 +7,7 @@ from KP2VIAA.KP2VIAA import KP2VIAA
 from json import load
 from codecs import open
 from lxml import etree
+import os
 
 
 
@@ -381,6 +382,20 @@ class KP2VIAATests(TestCase):
 
         self.test_write_all()
         self.kp2viaa.write_tree_to_xml()
+
+
+    def test_send_payload_to_viaa(self):
+
+        self.test_write_all()
+        self.kp2viaa.write_tree_to_xml()
+        self.kp2viaa.send_update_tree_to_viaa_new()
+
+    def test_remove_file(self):
+
+        self.kp2viaa.remove_viaa_xml_file()
+        self.assertFalse(os.path.exists("../resources/xml_viaa.xml"))
+
+
 
 
 

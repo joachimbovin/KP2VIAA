@@ -7,6 +7,7 @@ from configparser import ConfigParser
 from pandas import DataFrame
 from lxml import etree
 import requests
+import os
 
 
 class KP2VIAA(object):
@@ -226,6 +227,18 @@ class KP2VIAA(object):
         contentnav_2.addnext(child)
         child.text = "1992:08:21 00:00:00"
 
+    def validate_updated_tree_to_VIAA_xsd(self):
+        """
+        Validates the updated_tree using the VIAA xsd schema (does not work!)
+        :return:
+        """
+
+        viaa_xmlschema_doc = etree.parse(self.path_to_xsd)
+        viaa_xmlschema = etree.XMLSchema(viaa_xmlschema_doc)
+        viaa_xmlschema.validate(self.update_tree)
+        log = viaa_xmlschema.error_log
+        #error = log.last_error
+        print log
 
     def insert_tags_xml(self, parent_tag, child_tag, index):
         element = list(self.update_tree.iter(parent_tag))[0]
@@ -299,8 +312,7 @@ class KP2VIAA(object):
             full_name = row[1]["full name"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            is_in_mediahaven = self.compare_mediahaven_kunstenpunt(full_name, viaa_function)
-            if viaa_function_level == "Maker" and is_in_mediahaven is False:
+            if viaa_function_level == "Maker":
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name.decode("utf-8")
@@ -321,8 +333,7 @@ class KP2VIAA(object):
             full_name = row[1]["full name"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            is_in_mediahaven = self.compare_mediahaven_kunstenpunt(full_name, viaa_function)
-            if viaa_function_level == "Bijdrager" and is_in_mediahaven is False:
+            if viaa_function_level == "Bijdrager":
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name.decode("utf-8")
@@ -343,8 +354,7 @@ class KP2VIAA(object):
             full_name = row[1]["organisation"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            is_in_mediahaven = self.is_in_mediahaven(full_name, viaa_function)
-            if viaa_function_level == "Maker" and is_in_mediahaven is False:
+            if viaa_function_level == "Maker":
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name.decode("utf-8")
@@ -365,8 +375,7 @@ class KP2VIAA(object):
             full_name = row[1]["organisation"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            is_in_mediahaven = self.compare_mediahaven_kunstenpunt(full_name, viaa_function)
-            if viaa_function_level == "Bijdrager" and is_in_mediahaven is False:
+            if viaa_function_level == "Bijdrager":
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name.decode("utf-8")
@@ -439,59 +448,22 @@ class KP2VIAA(object):
                 child.text = viaa_language.decode("utf-8")    #?!  why not [0]?
 
 
-    def check_doubles(self, viaa_name, viaa_function):
-        #name = self.mediahaven_xml.xpath(u'.//value[text()="' + viaa_name.decode("utf-8") + u'"]').getnext()
-        #print name.text
 
-        element = list(self.mediahaven_xml.iter('mdProperties'))[0]
+    def test_if_PID_unique(self):
 
+        class PIDError(Exception):
 
+            def __init__(self, value):
+                self.value = value
 
-    def is_in_mediahaven(self, viaa_name, viaa_function): # TODO change this method so that it specifically searches for a name and the next
-        #element (=the function), now it just searches the entire document!!!
-        """
-        Searches the VIAA XML for name and function based on parameters and sends this to
-        compare_mediahaven_kunstenpunt
-        :param viaa_name:
-        :param viaa_function:
-        :return: ...
-        """
-        name = self.mediahaven_xml.xpath(u'.//value[text()="' + viaa_name.decode("utf-8") + u'"]')
-        function = self.mediahaven_xml.xpath(u'.//key[text()="' + viaa_function.decode("utf-8") + u'"]')
-        if len(name) == 0 and len(function) == 0:
-            return None, None
-        elif len(name) != 0 and len(function) == 0:
-            return name[0].text, None
-        elif len(name) == 0 and len(function) != 0:
-            return None, function[0].text
-        else:
-            return name[0].text, function[0].text
+            def __str__(self):
+                return repr(self.value)
 
-    def compare_mediahaven_kunstenpunt(self, viaa_name, viaa_function):
-        mediahaven_name, mediahaven_function = self.is_in_mediahaven(viaa_name, viaa_function)
-        if mediahaven_name is None:
-            return False
-        elif mediahaven_name == viaa_name and mediahaven_function == viaa_function:
-            return True
-        else:
-            return False
-
-    def test_if_PID_unique(self): #!!
         if int(self.mediahaven_xml[0].text) == 1:
-            print "OK!"
+            pass
         else:
-            print "Error!" # raise user generated error "multiple items found in viaa for pid" (https://docs.python.org/2/tutorial/errors.html#user-defined-exceptions)
-
-    def get_title_mediahaven(self):
-        """
-        Gets title from mediahaven xml and adds to update_tree, do not use!
-        :return:
-        """
-        element = list(self.update_tree.iter('MediaHAVEN_external_metadata'))[0]
-        title = list(self.mediahaven_xml.xpath('//title'))[0]
-        child = etree.Element("title")
-        element.insert(0, child)
-        child.text = title.text
+            raise PIDError("multiple items found in viaa for pid")
+            #print "Error!" # raise user generated error "multiple items found in viaa for pid" (https://docs.python.org/2/tutorial/errors.html#user-defined-exceptions)
 
     def get_mediahaven_fragmentId(self):
         """
@@ -501,51 +473,39 @@ class KP2VIAA(object):
         fragmentId = list(self.mediahaven_xml.xpath('//fragmentId'))[0]
         return fragmentId.text
 
-    def validate_updated_tree_to_VIAA_xsd(self):
-
-        viaa_xmlschema_doc = etree.parse(self.path_to_xsd)
-        viaa_xmlschema = etree.XMLSchema(viaa_xmlschema_doc)
-        viaa_xmlschema.validate(self.update_tree)
-        log = viaa_xmlschema.error_log
-        #error = log.last_error
-        print log
+    def remove_viaa_xml_file(self):
+        """
+        Removes xml file "xml_viaa.xml" from resources
+        :return:
+        """
+        if os.path.exists("../resources/xml_viaa.xml"):
+            os.remove("../resources/xml_viaa.xml")
 
     def write_tree_to_xml(self):
         """
-        writes the the xlm tree to an xml file
+        Writes the the xlm tree to an xml file
         :return:
         """
-
-        #payload = etree.tostring(self.update_tree, pretty_print=True, xml_declaration=True, encoding='UTF-8')
         with open("../resources/xml_viaa.xml", "w") as f:
             f.write(etree.tostring(self.update_tree, pretty_print=True, xml_declaration=True, encoding='UTF-8'))
 
     def send_update_tree_to_viaa_new(self):
-
+        """
+        Post xml to viaa QAS
+        :return:
+        """
         with open(self.path_to_pass_viaa, "r") as f:
             pass_viaa = f.read()
         fragmentId = self.get_mediahaven_fragmentId()
         url = "https://archief-qas.viaa.be/mediahaven-rest-api/resources/media/{0}".format(fragmentId)
-        username = "joachim.bovin@student.kuleuven.be"
+        username = "tom.ruette@kunsten.be"
         passwd = pass_viaa
-        files = {'metadata': ('../resources/test.xml', open('../resources/test.xml', 'rb'))}
+        files = {'metadata': ('../resources/xml_viaa.xml', open('../resources/xml_viaa.xml', 'rb'))}
         res = requests.post(url, files=files, auth=(username, passwd))
         print res
 
 
-if __name__ == "__main__":
-    kp2viaa = KP2VIAA()
-    kp2viaa.read_mapping_viaa_to_kp()
-    kp2viaa.create_viaa_xml()
-    kp2viaa.send_update_tree_to_viaa("viaa_id")
-    #kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
-    #kp2viaa.map_kp_to_viaa("viaa_id")
-    kp2viaa.write_kp_general_to_update_tree("viaa_id")
-    kp2viaa.write_kp_persons_to_viaa_makers("viaa_id")
-    kp2viaa.write_kp_persons_to_viaa_contributors("viaa_id")
-    kp2viaa.write_kp_organisations_to_viaa_contributors("viaa_id")
-    kp2viaa.write_kp_organisations_to_viaa_makers("viaa_id")
-    kp2viaa.map_kp_genres_to_viaa_genres("viaa_id")
-    kp2viaa.send_update_tree_to_viaa("viaa_id")
+#if __name__ == "__main__":
+
 
 
