@@ -61,7 +61,7 @@ class KP2VIAA(object):
     def get_access_database(self):
         """
         Gets access to the KP database
-        :return: a cursor object to interact with the MySQL server using a MySQLConnection object.
+        :return: a cursor object to interact with the MySQL server using a PostGreSQLConnection object.
         """
         cur = self.knst.cursor()
         return cur
