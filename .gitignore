@@ -4,3 +4,5 @@ venv/
 .DS_Store
 KP2VIAA/resources/db.cfg
 KP2VIAA/resources/qasviaaauthenticationbase64.txt
+KP2VIAA/resources/pass_viaa.txt
+KP2VIAA/resources/xml_viaa.xml
