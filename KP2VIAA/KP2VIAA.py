@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from json import load, dumps
+from json import load
 from codecs import open
 import psycopg2
 from configparser import ConfigParser
