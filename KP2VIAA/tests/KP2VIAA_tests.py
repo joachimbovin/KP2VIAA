@@ -45,26 +45,23 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists("dc_creators")
-        self.kp2viaa.write_kp_persons_to_viaa_makers("viaa_id")
+        self.kp2viaa.write_kp_persons_to_viaa_makers()
         self.assertEqual(self.kp2viaa.update_tree.xpath("//Choreograaf")[0].text, "Anne Teresa De Keersmaeker")
-        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
-
 
     def test_map_kp_persons_to_viaa_contributors(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
         self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists('dc_contributors')
-        self.kp2viaa.write_kp_persons_to_viaa_contributors("viaa_id")
+        self.kp2viaa.write_kp_persons_to_viaa_contributors()
         self.assertEqual(self.kp2viaa.update_tree.xpath("//Dirigent")[0].text, "Philippe Herreweghe")
-        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
 
     def test_map_kp_organisations_to_viaa_makers(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
         self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists('dc_creators')
-        self.kp2viaa.write_kp_organisations_to_viaa_makers("viaa_id")
+        self.kp2viaa.write_kp_organisations_to_viaa_makers()
         self.assertEqual(self.kp2viaa.update_tree.xpath("//Maker")[0].text, "Rosas")
         print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
 
@@ -76,7 +73,7 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists('dc_contributors')
-        self.kp2viaa.write_kp_organisations_to_viaa_contributors("viaa_id")
+        self.kp2viaa.write_kp_organisations_to_viaa_contributors()
         print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
 
 
@@ -85,7 +82,7 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists('dc_types')
-        self.kp2viaa.write_kp_genres_to_viaa_genres("viaa_id")
+        self.kp2viaa.write_kp_genres_to_viaa_genres()
         print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
 
 
@@ -94,7 +91,7 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_languages_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists("dc_languages")
-        self.kp2viaa.write_kp_languages_to_viaa_languages("viaa_id")
+        self.kp2viaa.write_kp_languages_to_viaa_languages()
         print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
 
     def test_write_all(self):
@@ -105,13 +102,12 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
         self.kp2viaa.get_kp_metadata_languages_for_viaa_id("viaa_id")
         self.kp2viaa.consume_api("bv79s1r49d")
-        self.kp2viaa.create_viaa_xml()     # = create tree!
+        self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists("dc_titles")
         self.kp2viaa.ensure_element_exists('dc_creators')
         self.kp2viaa.ensure_element_exists('dc_contributors')
         self.kp2viaa.ensure_element_exists('dc_types')
         self.kp2viaa.ensure_element_exists("dc_languages")
-        #self.kp2viaa.get_title_mediahaven()    # laten vallen!
         self.kp2viaa.write_kp_general_to_update_tree()
         self.kp2viaa.write_kp_persons_to_viaa_makers()
         self.kp2viaa.write_kp_persons_to_viaa_contributors()
@@ -119,20 +115,17 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.write_kp_organisations_to_viaa_contributors()
         self.kp2viaa.write_kp_languages_to_viaa_languages()
         self.kp2viaa.write_kp_genres_to_viaa_genres()
-        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
-        #self.kp2viaa.send_update_tree_to_viaa("viaa_id")
+        #print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
 
     def test_encoding(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
         self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
         encoded_name = self.kp2viaa.people_info.ix[18]["full name"]
-
         self.kp2viaa.create_viaa_xml()
         child = etree.Element("test")
         child.text = encoded_name.decode("utf-8")
         self.kp2viaa.update_tree.append(child)
-
-        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
+        #print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
 
     def test_read_mapping(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
@@ -160,12 +153,12 @@ class KP2VIAATests(TestCase):
         ], columns=["name", "season", "rerun"])
         self.assertTrue(self.kp2viaa.general_info.equals(mozart_metadata_expected))
 
-    def test_get_metadata_for_mozart_functies(self):
+    def test_get_metadata_for_mozart_functies_personen(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
         self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
         with open("../resources/mozart_personen_functies.json", "r", "utf-8") as f:
             x = load(f, encoding='utf-8')
-        mozart_metadata_expected = DataFrame(data=x, columns=['function', "production id", 'full name'])
+        mozart_metadata_expected = DataFrame(data=x, columns=['full name', "function", 'production id'])
         self.assertEqual(self.kp2viaa.people_info.to_string(), mozart_metadata_expected.to_string())
 
     def test_get_metadata_for_mozart_organisaties(self):
@@ -173,10 +166,10 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
         mozart_metadata_expected = DataFrame([
             {
-                "organisatie": "Rosas",
-                "functie": "gezelschap"
+                "organisation": "Rosas",
+                "function": "gezelschap"
             }
-        ], columns=["organisatie", "functie"])
+        ], columns=["organisation", "function"])
         self.assertTrue(self.kp2viaa.organisations_info.equals(mozart_metadata_expected))
 
     def test_get_metadata_for_mozart_genres(self):
@@ -184,10 +177,10 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
         mozart_metadata_expected = DataFrame([
             {
-                "Voorstelling" : "Mozart/Concert Arias Un Moto di Gioia",
-                "Genre" : "dans"
+                "show" : "Mozart/Concert Arias Un Moto di Gioia",
+                "genre" : "dans"
             }
-        ], columns=["Voorstelling", "Genre"])
+        ], columns=["show", "genre"])
         self.assertTrue(self.kp2viaa.genre_info.equals(mozart_metadata_expected))
 
     def test_get_metadata_for_mozart_languages(self):
@@ -195,15 +188,14 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_languages_for_viaa_id("viaa_id")
         mozart_metadata_expected = DataFrame([
             {
-                "voorstelling" : "Mozart/Concert Arias Un Moto di Gioia",
-                "taal" : None
+                "show" : "Mozart/Concert Arias Un Moto di Gioia",
+                "language" : None
             }
-        ], columns=["voorstelling", "taal"])
+        ], columns=["show", "language"])
         self.assertTrue(self.kp2viaa.language_info.equals(mozart_metadata_expected))
 
     def test_consume_api(self):
         #self.kp2viaa.consume_api("d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
-        #self.kp2viaa.consume_api("349a8b45a8bc47fdb214f79794c24994234453a83ff0453cbad2197e23a292a3d423bd21a938495ea0a19c92e2c02bc5")
         self.kp2viaa.consume_api("bv79s1r49d")
         print(etree.tostring(self.kp2viaa.mediahaven_xml, pretty_print=True))
 
@@ -214,39 +206,36 @@ class KP2VIAATests(TestCase):
             self.kp2viaa.test_if_PID_unique()
         self.assertEquals("'multiple items found in viaa for pid'", str(context.exception))
 
-    def test_validate_kp_input_to_viaa_xsd(self):
-
-        self.test_write_all()
-        #self.kp2viaa.validate_updated_tree_to_VIAA_xsd()
-        self.assertTrue(self.kp2viaa.validate_updated_tree_to_VIAA_xsd())
+    # def test_validate_kp_input_to_viaa_xsd(self):     Unfinished: XSD VIAA does not match VIAA metadatamodel
+    #
+    #     self.test_write_all()
+    #     self.kp2viaa.validate_updated_tree_to_VIAA_xsd()
+    #     self.assertTrue(self.kp2viaa.validate_updated_tree_to_VIAA_xsd())
 
     def test_get_mediahaven_fragmentID(self):
 
         self.kp2viaa.consume_api("bv79s1r49d")
         id = self.kp2viaa.get_mediahaven_fragmentId()
-        print id
-
-    def test_send_to_API(self):
-
-        self.kp2viaa.consume_api("bv79s1r49d")
-        self.kp2viaa.send_update_tree_to_viaa()
+        self.assertEqual(id,"d9e8142d64714b2ab9081317f7ef0c64a33b914162b34b25a5ab91ba192181c744fb015640ec43c9be820ab05ad4a42e")
 
     def test_write_to_xml(self):
 
         self.test_write_all()
         self.kp2viaa.write_tree_to_xml()
-
-
-    def test_send_payload_to_viaa(self):
-
-        self.test_write_all()
-        self.kp2viaa.write_tree_to_xml()
-        self.kp2viaa.send_update_tree_to_viaa_new()
+        self.assertTrue(os.path.exists("../resources/xml_viaa.xml"))
 
     def test_remove_file(self):
 
         self.kp2viaa.remove_viaa_xml_file()
         self.assertFalse(os.path.exists("../resources/xml_viaa.xml"))
+
+    def test_send_payload_to_viaa(self):
+
+        self.test_write_all()
+        self.kp2viaa.write_tree_to_xml()
+        self.kp2viaa.send_update_tree_to_viaa()
+
+
 
 
 

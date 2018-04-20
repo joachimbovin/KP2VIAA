@@ -438,7 +438,7 @@ class KP2VIAA(object):
         element = list(self.update_tree.iter('dc_languages'))[0]
 
         if self.language_info["language"][0] is None:
-            pass
+            etree.strip_elements(self.update_tree, "dc_languages", with_tail=True)
         else:
             for row in self.language_info.iterrows():
                 kp_taal = row[1]["language"]
@@ -461,7 +461,6 @@ class KP2VIAA(object):
             pass
         else:
             raise PIDError("multiple items found in viaa for pid")
-            #print "Error!" # raise user generated error "multiple items found in viaa for pid" (https://docs.python.org/2/tutorial/errors.html#user-defined-exceptions)
 
     def get_mediahaven_fragmentId(self):
         """
@@ -487,7 +486,7 @@ class KP2VIAA(object):
         with open("../resources/xml_viaa.xml", "w") as f:
             f.write(etree.tostring(self.update_tree, pretty_print=True, xml_declaration=True, encoding='UTF-8'))
 
-    def send_update_tree_to_viaa_new(self):
+    def send_update_tree_to_viaa(self):
         """
         Post xml to viaa QAS
         :return:
