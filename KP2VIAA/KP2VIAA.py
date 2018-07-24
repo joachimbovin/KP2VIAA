@@ -246,6 +246,10 @@ class KP2VIAA(object):
         element.insert(index, child)
 
     def ensure_element_exists(self, element_name):
+        """
+        Checks if an element exists in update_tree and appends it if is does not
+        :param name of the element
+        """
         elements = self.update_tree.xpath('//' + element_name)
         if len(elements) == 0:
             element = list(self.update_tree.iter("MDProperties"))[0]
@@ -299,62 +303,53 @@ class KP2VIAA(object):
                 else:
                     pass
 
-    def write_kp_persons_to_viaa_makers(self):
+    def write_kp_persons_to_viaa_makers_contributors(self):
         """
-        Matches the functions from the kp persons dataframe to the viaa "Makers" functions based on the mapping
+        Matches the functions from the kp persons dataframe to the viaa "Makers" and "Bijdragers" functions based on the mapping
         from the metadata_mapping.json
         :param viaa_id:
-        :return: XML tags for <dc_creators type="list">
+        :return: XML tags for <dc_creators type="list"> and  XML tags for <dc_contributors type="list">
         """
-        element = list(self.update_tree.iter('dc_creators'))[0]
 
         for row in self.people_info.iterrows():
             full_name = row[1]["full name"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
             if viaa_function_level == "Maker":
+                    element = list(self.update_tree.iter('dc_creators'))[0]
+                    child = etree.Element(viaa_function)
+                    element.insert(0, child)
+                    child.text = full_name.decode("utf-8")
+            elif viaa_function_level == "Bijdrager":
+                    element = list(self.update_tree.iter('dc_contributors'))[0]
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name.decode("utf-8")
             else:
                 pass
 
-    def write_kp_persons_to_viaa_contributors(self):
+
+    def write_kp_organisations_to_viaa_makers_contributors(self):
         """
-        Matches the functions from the kp persons dataframe to the viaa "Bijdragers" functions based on the mapping
+        Matches the functions from the kp organisations dataframe to the viaa "Makers" and "Bijdragers" functions based on the mapping
         from the metadata_mapping.json
         :param viaa_id:
-        :return: XML tags for <dc_contributors type="list">
+        :return: XML tags for <dc_creators type="list">  and  XML tags for <dc_contributors type="list">
+
         """
 
-        element = list(self.update_tree.iter('dc_contributors'))[0]
-
-        for row in self.people_info.iterrows():
-            full_name = row[1]["full name"]
-            kp_function = row[1]["function"]
-            viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
-            if viaa_function_level == "Bijdrager":
-                    child = etree.Element(viaa_function)
-                    element.insert(0, child)
-                    child.text = full_name.decode("utf-8")
-            else:
-                pass
-
-    def write_kp_organisations_to_viaa_makers(self):
-        """
-        Matches the functions from the kp organisations dataframe to the viaa "Makers" functions based on the mapping
-        from the metadata_mapping.json
-        :param viaa_id:
-        :return: XML tags for <dc_creators type="list">
-        """
-
-        element = list(self.update_tree.iter('dc_creators'))[0]
 
         for row in self.organisations_info.iterrows():
             full_name = row[1]["organisation"]
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
             if viaa_function_level == "Maker":
+                    element = list(self.update_tree.iter('dc_creators'))[0]
+                    child = etree.Element(viaa_function)
+                    element.insert(0, child)
+                    child.text = full_name.decode("utf-8")
+            elif viaa_function_level == "Bijdrager":
+                    element = list(self.update_tree.iter('dc_contributors'))[0]
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name.decode("utf-8")
@@ -376,6 +371,7 @@ class KP2VIAA(object):
             kp_function = row[1]["function"]
             viaa_function_level, viaa_function = self.map_kp_function_to_viaa_function(kp_function)
             if viaa_function_level == "Bijdrager":
+                    element = list(self.update_tree.iter('dc_contributors'))[0]
                     child = etree.Element(viaa_function)
                     element.insert(0, child)
                     child.text = full_name.decode("utf-8")

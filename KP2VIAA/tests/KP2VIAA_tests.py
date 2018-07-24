@@ -39,29 +39,26 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.ensure_element_exists("testje")
         self.assertEqual(len(self.kp2viaa.update_tree.xpath("//testje")), 1)
 
-    def test_map_kp_persons_to_viaa_makers(self):
+    def test_map_kp_persons_to_viaa_makers_contributors(self):
         self.kp2viaa.consume_api("bv79s1r49d")
         self.kp2viaa.read_mapping_viaa_to_kp()
         self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists("dc_creators")
-        self.kp2viaa.write_kp_persons_to_viaa_makers()
-        self.assertEqual(self.kp2viaa.update_tree.xpath("//Choreograaf")[0].text, "Anne Teresa De Keersmaeker")
-
-    def test_map_kp_persons_to_viaa_contributors(self):
-        self.kp2viaa.read_mapping_viaa_to_kp()
-        self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
-        self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists('dc_contributors')
-        self.kp2viaa.write_kp_persons_to_viaa_contributors()
+        self.kp2viaa.write_kp_persons_to_viaa_makers_contributors()
+        self.assertEqual(self.kp2viaa.update_tree.xpath("//Choreograaf")[0].text, "Anne Teresa De Keersmaeker")
         self.assertEqual(self.kp2viaa.update_tree.xpath("//Dirigent")[0].text, "Philippe Herreweghe")
+        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
 
-    def test_map_kp_organisations_to_viaa_makers(self):
+
+
+    def test_map_kp_organisations_to_viaa_makers_contributors(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
         self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists('dc_creators')
-        self.kp2viaa.write_kp_organisations_to_viaa_makers()
+        self.kp2viaa.write_kp_organisations_to_viaa_makers_contributors()
         self.assertEqual(self.kp2viaa.update_tree.xpath("//Maker")[0].text, "Rosas")
         print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
 
@@ -109,13 +106,13 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.ensure_element_exists('dc_types')
         self.kp2viaa.ensure_element_exists("dc_languages")
         self.kp2viaa.write_kp_general_to_update_tree()
-        self.kp2viaa.write_kp_persons_to_viaa_makers()
+        self.kp2viaa.write_kp_persons_to_viaa_makers_contributors()
         self.kp2viaa.write_kp_persons_to_viaa_contributors()
-        self.kp2viaa.write_kp_organisations_to_viaa_makers()
+        self.kp2viaa.write_kp_organisations_to_viaa_makers_contributors()
         self.kp2viaa.write_kp_organisations_to_viaa_contributors()
         self.kp2viaa.write_kp_languages_to_viaa_languages()
         self.kp2viaa.write_kp_genres_to_viaa_genres()
-        #print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
+        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
 
     def test_encoding(self):
         self.kp2viaa.read_mapping_viaa_to_kp()
