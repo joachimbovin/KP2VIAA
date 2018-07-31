@@ -122,7 +122,8 @@
               <xs:element maxOccurs="1" minOccurs="0" name="ebu_objectType" type="xs:string"/>
               <xs:element maxOccurs="1" minOccurs="0" name="dc_creators">
                 <xs:complexType>
-                  <xs:sequence>
+                  <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="Danser" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Archiefvormer" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Maker" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Auteur" type="xs:string"/>
@@ -138,15 +139,15 @@
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Productiehuis" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Regisseur" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Schrijver" type="xs:string"/>
-                    <xs:element maxOccurs="unbounded" minOccurs="0" name="productionCompany" type="xs:string"/>
-                  </xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="Choreograaf" type="xs:string"/>
+                  </xs:choice>
                   <xs:attribute default="list" name="type" type="xs:string" use="optional"/>
                   <xs:attribute ref="strategy" use="optional"/>
                 </xs:complexType>
               </xs:element>
               <xs:element maxOccurs="1" minOccurs="0" name="dc_contributors">
                 <xs:complexType>
-                  <xs:sequence>
+                  <xs:choice minOccurs="0" maxOccurs="unbounded">
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Bijdrager" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Adviseur" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="archivaris" type="xs:string"/>
@@ -184,7 +185,9 @@
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Grafisch_ontwerper" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Kostuum_ontwerper" type="xs:string"/>
                     <xs:element maxOccurs="unbounded" minOccurs="0" name="Technisch_adviseur" type="xs:string"/>
-                  </xs:sequence>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="Kostuumontwerper" type="xs:string"/>
+                    <xs:element maxOccurs="unbounded" minOccurs="0" name="Decorontwerper" type="xs:string"/>
+                  </xs:choice>
                   <xs:attribute default="list" name="type" type="xs:string" use="optional"/>
                   <xs:attribute ref="strategy" use="optional"/>
                 </xs:complexType>

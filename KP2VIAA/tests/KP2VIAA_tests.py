@@ -58,6 +58,7 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
         self.kp2viaa.create_viaa_xml()
         self.kp2viaa.ensure_element_exists('dc_creators')
+        self.kp2viaa.ensure_element_exists('dc_contributors')
         self.kp2viaa.write_kp_organisations_to_viaa_makers_contributors()
         self.assertEqual(self.kp2viaa.update_tree.xpath("//Maker")[0].text, "Rosas")
         print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True))
@@ -107,9 +108,9 @@ class KP2VIAATests(TestCase):
         self.kp2viaa.ensure_element_exists("dc_languages")
         self.kp2viaa.write_kp_general_to_update_tree()
         self.kp2viaa.write_kp_persons_to_viaa_makers_contributors()
-        self.kp2viaa.write_kp_persons_to_viaa_contributors()
+        #self.kp2viaa.write_kp_persons_to_viaa_contributors()
         self.kp2viaa.write_kp_organisations_to_viaa_makers_contributors()
-        self.kp2viaa.write_kp_organisations_to_viaa_contributors()
+        #self.kp2viaa.write_kp_organisations_to_viaa_contributors()
         self.kp2viaa.write_kp_languages_to_viaa_languages()
         self.kp2viaa.write_kp_genres_to_viaa_genres()
         print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
@@ -231,6 +232,50 @@ class KP2VIAATests(TestCase):
         self.test_write_all()
         self.kp2viaa.write_tree_to_xml()
         self.kp2viaa.send_update_tree_to_viaa()
+
+
+    def test_xsd_test(self):
+        self.kp2viaa.validate_updated_tree_to_VIAA_xsd()
+
+
+    def test_validate_xml(self):
+        self.kp2viaa.create_viaa_xml()
+        self.kp2viaa.validate_xml_viaa_xsd()
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_general_for_viaa_id("viaa_id")
+        #self.kp2viaa.create_viaa_xml()
+        self.kp2viaa.ensure_element_exists("dc_titles")
+        self.kp2viaa.write_kp_general_to_update_tree()
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_genres_for_viaa_id("viaa_id")
+        self.kp2viaa.ensure_element_exists('dc_types')
+        self.kp2viaa.write_kp_genres_to_viaa_genres()
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_languages_for_viaa_id("viaa_id")
+        self.kp2viaa.ensure_element_exists("dc_languages")
+        self.kp2viaa.write_kp_languages_to_viaa_languages()
+        self.kp2viaa.consume_api("bv79s1r49d")
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_personen_for_viaa_id("viaa_id")
+        self.kp2viaa.ensure_element_exists("dc_creators")
+        self.kp2viaa.ensure_element_exists('dc_contributors')
+        self.kp2viaa.write_kp_persons_to_viaa_makers_contributors()
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_organisaties_for_viaa_id("viaa_id")
+        self.kp2viaa.ensure_element_exists('dc_creators')
+        self.kp2viaa.ensure_element_exists('dc_contributors')
+        self.kp2viaa.write_kp_organisations_to_viaa_makers_contributors()
+        self.kp2viaa.read_mapping_viaa_to_kp()
+        self.kp2viaa.get_kp_metadata_languages_for_viaa_id("viaa_id")
+        self.kp2viaa.ensure_element_exists("dc_languages")
+        self.kp2viaa.write_kp_languages_to_viaa_languages()
+        #self.test_map_kp_general_to_dc_titles()
+        print(etree.tostring(self.kp2viaa.update_tree, pretty_print=True, encoding="utf-8"))
+        self.kp2viaa.validate_updated_tree_to_VIAA_xsd()
+        self.assertTrue(self.kp2viaa.validate_updated_tree_to_VIAA_xsd())
+
+
+
 
 
 

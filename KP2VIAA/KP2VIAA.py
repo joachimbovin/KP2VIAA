@@ -229,16 +229,18 @@ class KP2VIAA(object):
 
     def validate_updated_tree_to_VIAA_xsd(self):
         """
-        Validates the updated_tree using the VIAA xsd schema (does not work!)
-        :return:
+        Validates the updated_tree using the VIAA xsd schema
+        :return: validation: Boolean
         """
 
         viaa_xmlschema_doc = etree.parse(self.path_to_xsd)
         viaa_xmlschema = etree.XMLSchema(viaa_xmlschema_doc)
-        viaa_xmlschema.validate(self.update_tree)
+        validation = viaa_xmlschema.validate(self.update_tree)
+        #print validation #True if passed, False failed
         log = viaa_xmlschema.error_log
         #error = log.last_error
         print log
+        return validation
 
     def insert_tags_xml(self, parent_tag, child_tag, index):
         element = list(self.update_tree.iter(parent_tag))[0]
